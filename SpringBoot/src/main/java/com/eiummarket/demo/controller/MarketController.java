@@ -21,15 +21,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/markets")
+@RequestMapping("/markets")
 @RequiredArgsConstructor
 @Tag(name = "Market API", description = "시장 정보 CRUD API")
 public class MarketController {
 
-    private final com.eiummarket.demo.service.MarketService marketService;
+    private final MarketService marketService;
 
     @PostMapping
-    @Operation(summary = "시장 생성", description = "시장 정보를 신규 등록합니다.")
+    @Operation(summary = "시장 등록하기", description = "시장 정보를 신규 등록합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공",
             content = @Content(schema = @Schema(implementation = MarketDto.Response.class)))
     public ResponseEntity<MarketDto.Response> create(@Valid @RequestBody MarketDto.CreateRequest req) {
@@ -37,10 +37,10 @@ public class MarketController {
         return ResponseEntity.status(201).body(res);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "시장 단건 조회", description = "ID로 시장 정보를 조회합니다.")
-    public ResponseEntity<MarketDto.Response> get(@PathVariable Long id) {
-        return ResponseEntity.ok(marketService.get(id));
+    @GetMapping("/{marketId}")
+    @Operation(summary = "시장 단일 조회", description = "ID로 시장 정보를 조회합니다.")
+    public ResponseEntity<MarketDto.Response> get(@PathVariable Long marketId) {
+        return ResponseEntity.ok(marketService.get(marketId));
     }
 
     @GetMapping
@@ -49,17 +49,17 @@ public class MarketController {
         return ResponseEntity.ok(marketService.list(pageable));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{marketId}")
     @Operation(summary = "시장 부분 수정", description = "전달된 필드만 부분 업데이트합니다.")
-    public ResponseEntity<MarketDto.Response> update(@PathVariable Long id,
+    public ResponseEntity<MarketDto.Response> update(@PathVariable Long marketId,
                                                      @Valid @RequestBody MarketDto.UpdateRequest req) {
-        return ResponseEntity.ok(marketService.update(id, req));
+        return ResponseEntity.ok(marketService.update(marketId, req));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{marketId}")
     @Operation(summary = "시장 삭제", description = "해당 ID의 시장 정보를 삭제합니다.")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        marketService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long marketId) {
+        marketService.delete(marketId);
         return ResponseEntity.noContent().build();
     }
 }
