@@ -7,8 +7,12 @@ import com.eiummarket.demo.repository.MarketRepository;
 import com.eiummarket.demo.repository.ShopRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -46,17 +50,29 @@ public class ShopService {
      * 시장 내 상점 단건 조회
      */
     public ShopDto.Response getShop(Long marketId, Long shopId) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
         return toResponse(shop);
+    }
+
+
+    /**
+     * 시장 내 상점들 조회
+     */
+    public Page<ShopDto.Response> getShops(Long marketId, String category, Pageable pageable) {
+        Page<Shop> page = (category == null || category.isBlank())
+                ? shopRepository.findAllByMarket_MarketId(marketId, pageable)
+                : shopRepository.findAllByMarket_MarketIdAndCategory(marketId, category, pageable);
+        return page.map(this::toResponse);
     }
 
     /**
      * 상점 수정
      */
+
     @Transactional
     public ShopDto.Response updateShop(Long marketId, Long shopId, ShopDto.UpdateRequest request) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
 
         if (request.getName() != null) shop.setName(request.getName());
