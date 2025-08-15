@@ -78,4 +78,32 @@ public class MarketDto {
         @Schema(description = "시장 정보 생성 일시", example = "2025-08-13T20:15:30")
         private LocalDateTime createdAt;
     }
+
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @Schema(name = "MarketNearbyResponse", description = "근처 시장 응답(거리 포함)")
+    public static class NearbyResponse {
+        @Schema(description = "시장 고유 ID", example = "1")
+        private Long marketId;
+
+        @Schema(description = "시장 이름", example = "남대문시장")
+        private String name;
+
+        @Schema(description = "시장 주소", example = "서울특별시 중구 남대문시장4길 21")
+        private String address;
+
+        @Schema(description = "위도", example = "37.559980")
+        private BigDecimal latitude;
+
+        @Schema(description = "경도", example = "126.978400")
+        private BigDecimal longitude;
+
+        @Schema(description = "설명")
+        private String description;
+
+        @Schema(description = "생성 일시", example = "2025-08-13T20:15:30")
+        private LocalDateTime createdAt;
+
+        @Schema(description = "요청 좌표로부터의 거리(km)", example = "1.23")
+        private Double distanceKm;
+    }
 }

@@ -46,7 +46,7 @@ public class ShopService {
      * 시장 내 상점 단건 조회
      */
     public ShopDto.Response getShop(Long marketId, Long shopId) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
         return toResponse(shop);
     }
@@ -56,7 +56,7 @@ public class ShopService {
      */
     @Transactional
     public ShopDto.Response updateShop(Long marketId, Long shopId, ShopDto.UpdateRequest request) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
 
         if (request.getName() != null) shop.setName(request.getName());
@@ -76,7 +76,7 @@ public class ShopService {
      */
     @Transactional
     public void deleteShop(Long marketId, Long shopId) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
 
         shopRepository.delete(shop);

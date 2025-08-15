@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface ShopRepository extends JpaRepository<Shop, Long> {
 
-    Optional<Shop> findByIdAndMarketId(Long shopId, Long marketId);
+    Optional<Shop> findByShopIdAndMarketId(Long shopId, Long marketId);
 
     Page<Shop> findAllByMarketId(Long marketId, Pageable pageable);
 }

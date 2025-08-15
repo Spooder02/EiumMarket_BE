@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -40,13 +42,35 @@ public class Market {
     @Schema(description = "시장 경도(DECIMAL 9,6)", example = "126.978400")
     private BigDecimal longitude;
 
+    @OneToMany(mappedBy = "market", cascade = {}, orphanRemoval = false)
+    @Builder.Default
+    @Schema(description = "시장에 속한 상점 목록")
+    private List<Shop> shops = new ArrayList<>();
+
+    // TEXT 매핑
     @Lob
     @Column(name = "description", columnDefinition = "TEXT")
-    @Schema(description = "시장 설명", example = "전통 시장으로 다양한 먹거리와 상점이 밀집해 있습니다.")
+    @Schema(description = "시장 설명", example = "이 시장은 다양한 상점이 모여 있는 복합 쇼핑 공간입니다.")
     private String description;
 
+    // 생성 시각 자동 기록
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")
-    @Schema(description = "시장 정보 생성 일시", example = "2025-08-13T20:15:30")
+    @Schema(description = "시장 정보 생성일시", example = "2025-08-13T20:15:30")
     private LocalDateTime createdAt;
+
+    // 양방향 편의 메서드
+    public void addShop(Shop shop) {
+        if (shop == null) return;
+        this.shops.add(shop);
+        shop.setMarket(this);
+    }
+
+    public void removeShop(Shop shop) {
+        if (shop == null) return;
+        this.shops.remove(shop);
+        if (shop.getMarket() == this) {
+            shop.setMarket(null);
+        }
+    }
 }

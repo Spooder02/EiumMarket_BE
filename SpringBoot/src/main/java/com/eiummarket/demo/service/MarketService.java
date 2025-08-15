@@ -65,6 +65,31 @@ public class MarketService {
         marketRepository.deleteById(id);
     }
 
+    public Page<MarketDto.Response> search(String search, Pageable pageable) {
+        String sanitized = sanitizeSearch(search);
+        if (sanitized == null) {
+            return list(pageable);
+        }
+        String pattern = "%" + escapeLike(sanitized.toLowerCase()) + "%";
+        Page<Market> page = marketRepository.searchByKeyword(pattern, pageable);
+        return page.map(this::toResponse);
+    }
+
+    private String sanitizeSearch(String s) {
+        if (s == null) return null;
+        String trimmed = s.trim();
+        if (trimmed.isEmpty()) return null;
+        // 길이 상한(예: 100자)으로 과도한 검색 방지
+        return trimmed.length() > 100 ? trimmed.substring(0, 100) : trimmed;
+    }
+
+    // LIKE 검색용 이스케이프
+    private String escapeLike(String s) {
+        return s.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+    }
+
     private MarketDto.Response toResponse(Market m) {
         return MarketDto.Response.builder()
                 .marketId(m.getMarketId())
