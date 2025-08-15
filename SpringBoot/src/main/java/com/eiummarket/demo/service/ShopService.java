@@ -92,9 +92,8 @@ public class ShopService {
      */
     @Transactional
     public void deleteShop(Long marketId, Long shopId) {
-        Shop shop = shopRepository.findByIdAndMarketId(shopId, marketId)
+        Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
-
         shopRepository.delete(shop);
     }
 
