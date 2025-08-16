@@ -75,6 +75,7 @@ public class Shop {
 
     @BatchSize(size=10)
     @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Item> items = new ArrayList<>();
 
     @Column(name = "favorite_count")
