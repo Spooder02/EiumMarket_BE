@@ -26,15 +26,16 @@ public class ItemService {
     private final ShopRepository shopRepository;
 
     public ItemDto.Response createItem(ItemDto.CreateRequest request) {
-        Market shop = shopRepository.findById(request.getShopId())
+        Shop shop = shopRepository.findById(request.getShopId())
                 .orElseThrow(() -> new EntityNotFoundException("해당 상점을 찾을 수 없습니다."));
 
-        Item item = Item.builder()
+        Item item = builder()
                 .shop(shop)
                 .name(request.getName())
                 .price(request.getPrice())
                 .category(request.getCategory())
                 .description(request.getDescription())
+                .itemImageUrl(request.getItemImageUrl())
                 .build();
 
         Item savedItem = itemRepository.save(item);
@@ -85,11 +86,12 @@ public class ItemService {
     private ItemDto.Response toResponse(Item item) {
         return ItemDto.Response.builder()
                 .itemId(item.getItemId())
-                .shopId(item.getShop().getMarketId())
+                .shopId(item.getShop().getShopId())
                 .name(item.getName())
                 .price(item.getPrice())
                 .category(item.getCategory())
                 .description(item.getDescription())
+                .itemImageUrl(item.getItemImageUrl())
                 .createdAt(item.getCreatedAt())
                 .build();
     }
