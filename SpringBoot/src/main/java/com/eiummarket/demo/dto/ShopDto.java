@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ShopDto {
 
@@ -47,6 +48,12 @@ public class ShopDto {
 
         @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
         private String description;
+
+        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
+        private String shopImageUrl;
+
+        @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
+        private String address;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -80,6 +87,12 @@ public class ShopDto {
 
         @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
         private String description;
+
+        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
+        private String shopImageUrl;
+
+        @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
+        private String address;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -90,6 +103,9 @@ public class ShopDto {
 
         @Schema(description = "시장 ID", example = "1")
         private Long marketId;
+
+        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
+        private String shopImageUrl;
 
         @Schema(description = "상점 이름", example = "김밥천국")
         private String name;
@@ -102,6 +118,9 @@ public class ShopDto {
 
         @Schema(description = "운영 시간", example = "09:00 ~ 21:00")
         private String openingHours;
+
+        @Schema(description = "상점 주소", example = "전남 여수시 서교4길 8-3")
+        private String address; // ✨ ADDED
 
         @Schema(description = "상점 위치/층수", example = "A-02호")
         private String floor;
@@ -117,5 +136,14 @@ public class ShopDto {
 
         @Schema(description = "상점 정보 생성 일시", example = "2025-08-13T20:15:30")
         private LocalDateTime createdAt;
+
+        @Schema(description = "찜한 사용자 수", example = "5")
+        private Long favoriteCount;
+
+        @Schema(description = "검색 시 매칭된 키워드")
+        private List<String> matchedKeywords;
+
+        @Schema(description = "상점에서 판매하는 상품 목록")
+        private List<ItemDto.Response> items;
     }
 }

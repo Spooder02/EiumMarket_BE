@@ -3,10 +3,13 @@ package com.eiummarket.demo.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -37,6 +40,10 @@ public class Shop {
     @Schema(description = "상점 분류 (예: 음식점, 의류 등)", example = "음식점")
     private String category;
 
+    @Column(name = "shop_image_url")
+    @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
+    private String shopImageUrl;
+
     @Column(name = "phone_number", length = 20)
     @Schema(description = "상점 전화번호", example = "02-123-4567")
     private String phoneNumber;
@@ -44,6 +51,10 @@ public class Shop {
     @Column(name = "opening_hours", length = 255)
     @Schema(description = "운영 시간", example = "09:00 ~ 21:00")
     private String openingHours;
+
+    @Column(length = 50)
+    @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
+    private String address;
 
     @Column(length = 50)
     @Schema(description = "상점 위치/층수", example = "A-02호")
@@ -61,6 +72,14 @@ public class Shop {
     @Column(name = "description", columnDefinition = "TEXT")
     @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
     private String description;
+
+    @BatchSize(size=10)
+    @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY)
+    private List<Item> items = new ArrayList<>();
+
+    @Column(name = "favorite_count")
+    @Schema(description = "찜 개수", example = "120")
+    private Long favoriteCount;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")

@@ -22,12 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class ShopController {
 
     private final ShopService shopService;
-    private final FavoriteService favoriteService;
 
     // 시장 내 상점 목록 조회 (category 필터)
     @GetMapping
     @Operation(summary = "시장 내 상점 목록 조회",
-            description = "특정 시장에 속한 모든 혹은 특정 카테고리의 상점을 페이지네이션으로 조회합니다. ")
+            description = "특정 시장에 속한 모든 혹은 특정 카테고리의 상점을 페이지네이션으로 조회합니다. (카테고리가 null이라면 모든 상점을 가져옵니다)")
     @ApiResponse(responseCode = "200", description = "조회 성공",
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
     public ResponseEntity<Page<ShopDto.Response>> listShops(

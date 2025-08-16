@@ -1,8 +1,12 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
+import com.eiummarket.demo.model.Item;
 import com.eiummarket.demo.model.Market;
 import com.eiummarket.demo.model.Shop;
+import com.eiummarket.demo.repository.FavoriteRepository;
+import com.eiummarket.demo.repository.ItemRepository;
 import com.eiummarket.demo.repository.MarketRepository;
 import com.eiummarket.demo.repository.ShopRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,7 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +28,7 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final MarketRepository marketRepository;
+    private final ItemRepository itemRepository;
 
     /**
      * 상점 생성
@@ -40,6 +48,9 @@ public class ShopService {
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .description(request.getDescription())
+                .shopImageUrl(request.getShopImageUrl())
+                .address(request.getAddress())
+                .favoriteCount(0L)
                 .build();
 
         Shop saved = shopRepository.save(shop);
@@ -51,7 +62,7 @@ public class ShopService {
      */
     public ShopDto.Response getShop(Long marketId, Long shopId) {
         Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
-                .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
+                .orElseThrow(() -> new IllegalArgumentException("Shop not found"));
         return toResponse(shop);
     }
 
@@ -83,6 +94,8 @@ public class ShopService {
         if (request.getLatitude() != null) shop.setLatitude(request.getLatitude());
         if (request.getLongitude() != null) shop.setLongitude(request.getLongitude());
         if (request.getDescription() != null) shop.setDescription(request.getDescription());
+        if (request.getShopImageUrl() != null) shop.setShopImageUrl(request.getShopImageUrl());
+        if (request.getAddress() != null) shop.setAddress(request.getAddress());
 
         return toResponse(shop);
     }
@@ -97,15 +110,51 @@ public class ShopService {
         shopRepository.delete(shop);
     }
 
+    public List<ShopDto.Response> search(String keyword) {
+        Set<Shop> result = new HashSet<>();
+
+        // 1. 가게명 검색
+        result.addAll(shopRepository.findByNameContainingIgnoreCase(keyword));
+        // 2. 카테고리 검색
+        result.addAll(shopRepository.findByCategoryContainingIgnoreCase(keyword));
+        // 3. 아이템 검색 (아이템명/설명)
+        result.addAll(itemRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword)
+                .stream()
+                .map(Item::getShop)
+                .collect(Collectors.toSet()));
+
+        // 결과 변환
+        return result.stream().map(shop -> {
+            ShopDto.Response response = toResponse(shop);
+            response.setMatchedKeywords(List.of(keyword));
+            return response;
+        }).collect(Collectors.toList());
+    }
+
     /**
      * 엔티티 → DTO 변환
      */
     private ShopDto.Response toResponse(Shop shop) {
+        // Item 엔티티를 ItemDto.Response로 변환하는 로직
+        List<ItemDto.Response> itemDtos = shop.getItems().stream()
+                .map(item -> ItemDto.Response.builder()
+                        .itemId(item.getItemId())
+                        .shopId(item.getShop().getShopId())
+                        .name(item.getName())
+                        .price(item.getPrice())
+                        .category(item.getCategory())
+                        .description(item.getDescription())
+                        .createdAt(item.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
         return ShopDto.Response.builder()
                 .shopId(shop.getShopId())
                 .marketId(shop.getMarket().getMarketId())
                 .name(shop.getName())
                 .category(shop.getCategory())
+                .shopImageUrl(shop.getShopImageUrl())
+                .address(shop.getAddress())
                 .phoneNumber(shop.getPhoneNumber())
                 .openingHours(shop.getOpeningHours())
                 .floor(shop.getFloor())
@@ -113,6 +162,8 @@ public class ShopService {
                 .longitude(shop.getLongitude())
                 .description(shop.getDescription())
                 .createdAt(shop.getCreatedAt())
+                .favoriteCount(shop.getFavoriteCount())
+                .items(itemDtos)
                 .build();
     }
 }
