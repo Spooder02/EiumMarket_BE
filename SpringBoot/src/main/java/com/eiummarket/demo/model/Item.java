@@ -27,7 +27,7 @@ public class Item {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shop_id", nullable = false)
     @Schema(description = "상품이 속한 상점", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Market shop;
+    private Shop shop;
 
     @Column(nullable = false, length = 255)
     @Schema(description = "상품 이름", example = "감자", requiredMode = Schema.RequiredMode.REQUIRED)

@@ -17,19 +17,18 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/items")
 @Tag(name = "Item API", description = "상품 관련 API")
 public class ItemController {
 
     private final ItemService itemService;
 
-    @PostMapping
+    @PostMapping("/markets/{marketId}/shops/{shopId}/items")
     @Operation(summary = "상품 생성", description = "새로운 상품을 등록합니다.")
     public ResponseEntity<ItemDto.Response> createItem(@RequestBody ItemDto.CreateRequest request) {
         return ResponseEntity.ok(itemService.createItem(request));
     }
 
-    @GetMapping("/{itemId}")
+    @GetMapping("/markets/{marketId}/shops/{shopId}/{itemId}")
     @Operation(summary = "상품 조회", description = "상품 ID로 상품 정보를 조회합니다.")
     public ResponseEntity<ItemDto.Response> getItem(@PathVariable Long itemId) {
         return ResponseEntity.ok(itemService.getItem(itemId));
@@ -44,7 +43,7 @@ public class ItemController {
         return ResponseEntity.ok(itemService.listByShop(marketId, shopId, pageable));
     }
 
-    @PutMapping("/{itemId}")
+    @PutMapping("/markets/{marketId}/shops/{shopId}/items/{itemId}")
     @Operation(summary = "상품 수정", description = "상품 ID로 상품 정보를 수정합니다.")
     public ResponseEntity<ItemDto.Response> updateItem(
             @PathVariable Long itemId,
@@ -53,7 +52,7 @@ public class ItemController {
         return ResponseEntity.ok(itemService.updateItem(itemId, request));
     }
 
-    @DeleteMapping("/{itemId}")
+    @DeleteMapping("/markets/{marketId}/shops/{shopId}/items/{itemId}")
     @Operation(summary = "상품 삭제", description = "상품 ID로 상품을 삭제합니다.")
     public ResponseEntity<Void> deleteItem(@PathVariable Long itemId) {
         itemService.deleteItem(itemId);
