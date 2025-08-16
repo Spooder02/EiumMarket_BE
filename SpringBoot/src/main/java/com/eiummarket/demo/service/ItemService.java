@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+import static com.eiummarket.demo.model.Item.*;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -61,6 +63,8 @@ public class ItemService {
         if (request.getPrice() != null) item.setPrice(request.getPrice());
         if (request.getCategory() != null) item.setCategory(request.getCategory());
         if (request.getDescription() != null) item.setDescription(request.getDescription());
+        if (request.getItemImageUrl() != null) item.setItemImageUrl(request.getItemImageUrl());
+
 
         return toResponse(item);
     }

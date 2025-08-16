@@ -32,6 +32,9 @@ public class ItemDto {
 
         @Schema(description = "상품 설명", example = "찌거나 볶아서 맛있는 감자입니다.")
         private String description;
+
+        @Schema(description = "상품 이미지 URL", example = "https://.../image.png")
+        private String itemImageUrl;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -50,6 +53,9 @@ public class ItemDto {
 
         @Schema(description = "상품 설명", example = "국거리로도 좋은 감자입니다.")
         private String description;
+
+        @Schema(description = "상품 이미지 URL", example = "https://.../image.png")
+        private String itemImageUrl;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -75,5 +81,8 @@ public class ItemDto {
 
         @Schema(description = "상품 생성 시간", example = "2025-08-13T20:15:30")
         private LocalDateTime createdAt;
+
+        @Schema(description = "상품 이미지 URL", example = "https://.../image.png")
+        private String itemImageUrl;
     }
 }
