@@ -118,7 +118,7 @@ public class ShopService {
         // 2. 카테고리 검색
         result.addAll(shopRepository.findByCategoryContainingIgnoreCase(keyword));
         // 3. 아이템 검색 (아이템명/설명)
-        result.addAll(itemRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword)
+        result.addAll(itemRepository.findByNameContainingIgnoreCaseOrDescriptionContaining(keyword, keyword)
                 .stream()
                 .map(Item::getShop)
                 .collect(Collectors.toSet()));
