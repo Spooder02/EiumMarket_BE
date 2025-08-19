@@ -24,9 +24,8 @@ public class ShopDto {
         @Schema(description = "상점 이름", example = "김밥천국", requiredMode = Schema.RequiredMode.REQUIRED)
         private String name;
 
-        @Size(max = 100)
-        @Schema(description = "상점 분류", example = "음식점")
-        private String category;
+        @Schema(description = "카테고리 ID 목록", example = "[1,2]")
+        private List<Long> categoryIds;
 
         @Size(max = 20)
         @Schema(description = "상점 전화번호", example = "02-123-4567")
@@ -54,6 +53,7 @@ public class ShopDto {
 
         @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
         private String address;
+
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -63,10 +63,6 @@ public class ShopDto {
         @Schema(description = "상점 이름", example = "김밥천국")
         private String name;
 
-        @Size(max = 100)
-        @Schema(description = "상점 분류", example = "음식점")
-        private String category;
-
         @Size(max = 20)
         @Schema(description = "상점 전화번호", example = "02-123-4567")
         private String phoneNumber;
@@ -93,6 +89,9 @@ public class ShopDto {
 
         @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
         private String address;
+
+        @Schema(description = "카테고리 ID 목록", example = "[1,2]")
+        private List<Long> categoryIds;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -109,9 +108,6 @@ public class ShopDto {
 
         @Schema(description = "상점 이름", example = "김밥천국")
         private String name;
-
-        @Schema(description = "상점 분류", example = "음식점")
-        private String category;
 
         @Schema(description = "상점 전화번호", example = "02-123-4567")
         private String phoneNumber;
@@ -145,5 +141,9 @@ public class ShopDto {
 
         @Schema(description = "상점에서 판매하는 상품 목록")
         private List<ItemDto.Response> items;
+
+        @Schema(description = "카테고리 목록")
+        private List<CategoryDto.Response> categories;
     }
+
 }

@@ -36,10 +36,6 @@ public class Shop {
     @Schema(description = "상점 이름", example = "김밥천국", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @Column(length = 100)
-    @Schema(description = "상점 분류 (예: 음식점, 의류 등)", example = "음식점")
-    private String category;
-
     @Column(name = "shop_image_url")
     @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
     private String shopImageUrl;
@@ -81,6 +77,16 @@ public class Shop {
     @Column(name = "favorite_count")
     @Schema(description = "찜 개수", example = "120")
     private Long favoriteCount;
+
+    @ManyToMany
+    @JoinTable(
+            name = "shop_categories",
+            joinColumns = @JoinColumn(name = "shop_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    @Builder.Default
+    @Schema(description = "카테고리 목록")
+    private List<Category> categories = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")

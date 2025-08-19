@@ -1,5 +1,6 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ShopDto;
 import com.eiummarket.demo.model.Favorite;
 import com.eiummarket.demo.model.Shop;
@@ -11,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,18 +38,27 @@ public class FavoriteService {
 
     public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
         return shopRepository.findFavoriteShopsByUserId(userId, marketId, pageable)
-                .map(s -> ShopDto.Response.builder()
-                        .shopId(s.getShopId())
-                        .marketId(s.getMarket().getMarketId())
-                        .name(s.getName())
-                        .category(s.getCategory())
-                        .phoneNumber(s.getPhoneNumber())
-                        .openingHours(s.getOpeningHours())
-                        .floor(s.getFloor())
-                        .latitude(s.getLatitude())
-                        .longitude(s.getLongitude())
-                        .description(s.getDescription())
-                        .createdAt(s.getCreatedAt())
-                        .build());
+                .map(this::toResponse);
+    }
+
+    private ShopDto.Response toResponse(Shop shop) {
+        return ShopDto.Response.builder()
+                .shopId(shop.getShopId())
+                .marketId(shop.getMarket().getMarketId())
+                .name(shop.getName())
+                .phoneNumber(shop.getPhoneNumber())
+                .openingHours(shop.getOpeningHours())
+                .floor(shop.getFloor())
+                .latitude(shop.getLatitude())
+                .longitude(shop.getLongitude())
+                .description(shop.getDescription())
+                .createdAt(shop.getCreatedAt())
+                .categories(shop.getCategories().stream()
+                        .map(cat -> CategoryDto.Response.builder()
+                                .categoryId(cat.getCategoryId())
+                                .name(cat.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 }
