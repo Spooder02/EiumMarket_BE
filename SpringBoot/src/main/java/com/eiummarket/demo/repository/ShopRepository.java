@@ -25,11 +25,15 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
             where f.userId = :userId
               and (:marketId is null or f.shop.market.marketId = :marketId)
            """)
-    Page<Shop> findFavoriteShopsByUsername(@Param("userId") Integer userId,
+    Page<Shop> findFavoriteShopsByUserId(@Param("userId") Integer userId,
                                            @Param("marketId") Long marketId,
                                            Pageable pageable);
 
-    List<Shop> findByNameContainingIgnoreCase(String keyword);
-    List<Shop> findByCategoryContainingIgnoreCase(String keyword);
+    @Query("SELECT s FROM Shop s WHERE " +
+            "LOWER(s.name) LIKE %:keyword% OR " +
+            "LOWER(s.category) LIKE %:keyword% OR " +
+            "LOWER(s.description) LIKE %:keyword% OR " +
+            "EXISTS (SELECT i FROM Item i WHERE i.shop = s AND (LOWER(i.name) LIKE %:keyword% OR LOWER(i.description) LIKE %:keyword%))")
+    Page<Shop> searchByAllKeywords(@Param("keyword") String keyword, Pageable pageable);
 
 }

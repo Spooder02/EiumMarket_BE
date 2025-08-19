@@ -1,14 +1,13 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.Utils.SearchUtils;
+import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
 import com.eiummarket.demo.model.Item;
 import com.eiummarket.demo.model.Market;
 import com.eiummarket.demo.model.Shop;
-import com.eiummarket.demo.repository.FavoriteRepository;
-import com.eiummarket.demo.repository.ItemRepository;
-import com.eiummarket.demo.repository.MarketRepository;
-import com.eiummarket.demo.repository.ShopRepository;
+import com.eiummarket.demo.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,10 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import lombok.*;
+
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.util.Collections.list;
 
 @Service
 @RequiredArgsConstructor
@@ -110,25 +111,14 @@ public class ShopService {
         shopRepository.delete(shop);
     }
 
-    public List<ShopDto.Response> search(String keyword) {
-        Set<Shop> result = new HashSet<>();
-
-        // 1. 가게명 검색
-        result.addAll(shopRepository.findByNameContainingIgnoreCase(keyword));
-        // 2. 카테고리 검색
-        result.addAll(shopRepository.findByCategoryContainingIgnoreCase(keyword));
-        // 3. 아이템 검색 (아이템명/설명)
-        result.addAll(itemRepository.findByNameContainingIgnoreCaseOrDescriptionContaining(keyword, keyword)
-                .stream()
-                .map(Item::getShop)
-                .collect(Collectors.toSet()));
-
-        // 결과 변환
-        return result.stream().map(shop -> {
-            ShopDto.Response response = toResponse(shop);
-            response.setMatchedKeywords(List.of(keyword));
-            return response;
-        }).collect(Collectors.toList());
+    public Page<ShopDto.Response> search(String keyword, Pageable pageable) {
+        String sanitized= SearchUtils.sanitize(keyword);
+        if (sanitized==null){
+            return shopRepository.findAll(pageable).map(this::toResponse);
+        }
+        String escapedKeyword = SearchUtils.escapeLike(sanitized.toLowerCase());
+        return shopRepository.searchByAllKeywords(escapedKeyword, pageable)
+                .map(this::toResponse);
     }
 
     /**

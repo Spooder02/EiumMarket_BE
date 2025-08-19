@@ -9,5 +9,4 @@ import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
     Page<Item> findAllByShop_ShopId(Long shopId, Pageable pageable);
-    List<Item> findByNameContainingIgnoreCaseOrDescriptionContaining(String name, String description);
 }
