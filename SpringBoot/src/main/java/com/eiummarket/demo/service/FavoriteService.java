@@ -34,7 +34,7 @@ public class FavoriteService {
     }
 
     public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
-        return shopRepository.findFavoriteShopsByUsername(userId, marketId, pageable)
+        return shopRepository.findFavoriteShopsByUserId(userId, marketId, pageable)
                 .map(s -> ShopDto.Response.builder()
                         .shopId(s.getShopId())
                         .marketId(s.getMarket().getMarketId())
