@@ -49,13 +49,6 @@ public class ItemService {
         return toResponse(item);
     }
 
-    @Transactional(readOnly = true)
-    public List<ItemDto.Response> getAllItems() {
-        return itemRepository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
     public ItemDto.Response updateItem(Long itemId, ItemDto.UpdateRequest request) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 상품을 찾을 수 없습니다."));
