@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     boolean existsByShop_ShopIdAndUserId(Long shopId, Integer userId);
     Optional<Favorite> findByShop_ShopIdAndUserId(Long shopId, Integer userId);
-    void deleteByShop_ShopIdAndUserId(Long shopId, Integer userId);
+    long deleteByShop_ShopIdAndUserId(Long shopId, Integer userId);
     Long countByShop_ShopId(Long shopId);
+
 }

@@ -1,29 +1,22 @@
 package com.eiummarket.demo.service;
 
-import com.eiummarket.demo.Utils.SearchUtils;
 import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
 import com.eiummarket.demo.model.Category;
-import com.eiummarket.demo.model.Item;
 import com.eiummarket.demo.model.Market;
 import com.eiummarket.demo.model.Shop;
 import com.eiummarket.demo.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.list;
 
 @Service
 @RequiredArgsConstructor
@@ -137,14 +130,116 @@ public class ShopService {
         shopRepository.delete(shop);
     }
 
+    @Transactional(readOnly = true)
     public Page<ShopDto.Response> search(String keyword, Pageable pageable) {
-        String sanitized= SearchUtils.sanitize(keyword);
-        if (sanitized==null){
+        String sanitized = (keyword == null) ? "" : keyword.trim();
+        if (sanitized.isBlank()) {
             return shopRepository.findAll(pageable).map(this::toResponse);
         }
-        String escapedKeyword = SearchUtils.escapeLike(sanitized.toLowerCase());
-        return shopRepository.searchByAllKeywords(escapedKeyword, pageable)
-                .map(this::toResponse);
+
+        String lowered = sanitized.toLowerCase(Locale.ROOT);
+        String escaped = lowered
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        String pattern = "%" + escaped + "%";
+
+        int cap = Math.max(pageable.getPageSize() * 5, 100);
+        Pageable probe = PageRequest.of(0, cap);
+
+        List<Shop> byName = shopRepository
+                .findByNameContaining(sanitized, probe)
+                .getContent();
+        List<Shop> byDesc = shopRepository
+                .findByDescriptionContaining(sanitized, probe)
+                .getContent();
+
+        List<Shop> byCategory = categoryRepository
+                .findShopsByCategoryNameLike(pattern, probe)
+                .getContent();
+
+        List<Shop> byItem = itemRepository
+                .findShopsByItemKeywordLike(pattern, probe)
+                .getContent();
+
+        Map<Long, Shop> merged = new LinkedHashMap<>();
+        addAll(merged, byName);
+        addAll(merged, byDesc);
+        addAll(merged, byCategory);
+        addAll(merged, byItem);
+
+        List<Shop> all = new ArrayList<>(merged.values());
+        sortByPageable(all, pageable);
+
+        int total = all.size();
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), total);
+        List<Shop> slice = (start >= total) ? List.of() : all.subList(start, end);
+
+        List<ShopDto.Response> content = slice.stream()
+                .map(this::toResponse)
+                .toList();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    private void addAll(Map<Long, Shop> target, List<Shop> source) {
+        for (Shop s : source) target.putIfAbsent(s.getShopId(), s);
+    }
+
+    private void sortByPageable(List<Shop> list, Pageable pageable) {
+        if (pageable == null || pageable.getSort().isUnsorted()) {
+            list.sort(
+                    Comparator.comparing(
+                            Shop::getName,
+                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+                    ).thenComparing(
+                            Shop::getShopId,
+                            Comparator.nullsLast(Long::compareTo)
+                    )
+            );
+            return;
+        }
+
+        Comparator<Shop> comp = null;
+
+        for (Sort.Order order : pageable.getSort()) {
+            Comparator<Shop> c = switch (order.getProperty()) {
+                case "favoriteCount" -> Comparator.comparingLong(
+                        s -> s.getFavoriteCount() == null ? 0L : s.getFavoriteCount()
+                );
+                case "name" -> Comparator.comparing(
+                        Shop::getName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+                );
+                case "createdAt" -> Comparator.comparing(
+                        Shop::getCreatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                );
+                default -> null;
+            };
+
+            if (c != null) {
+                if (order.isDescending()) c = c.reversed();
+                comp = (comp == null) ? c : comp.thenComparing(c);
+            }
+        }
+        if (comp == null) {
+            comp = Comparator.comparing(
+                    Shop::getName,
+                    Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+            ).thenComparing(
+                    Shop::getShopId,
+                    Comparator.nullsLast(Long::compareTo)
+            );
+        } else {
+            comp = comp.thenComparing(
+                    Shop::getShopId,
+                    Comparator.nullsLast(Long::compareTo)
+            );
+        }
+
+        list.sort(comp);
     }
 
     /**

@@ -26,14 +26,21 @@ public class FavoriteService {
     @Transactional
     public void likeShop(Long shopId, Integer userId) {
         if (favoriteRepository.existsByShop_ShopIdAndUserId(shopId, userId)) return;
+
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId));
         favoriteRepository.save(Favorite.builder().shop(shop).userId(userId).build());
+        // 카운트 +1
+        shopRepository.incrementFavoriteCount(shopId);
     }
 
     @Transactional
     public void unlikeShop(Long shopId, Integer userId) {
-        favoriteRepository.deleteByShop_ShopIdAndUserId(shopId, userId);
+        long deleted = favoriteRepository.deleteByShop_ShopIdAndUserId(shopId, userId);
+        if (deleted > 0) {
+            shopRepository.decrementFavoriteCount(shopId);
+        }
+
     }
 
     public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
