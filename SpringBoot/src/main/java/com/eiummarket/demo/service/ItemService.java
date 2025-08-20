@@ -2,7 +2,6 @@ package com.eiummarket.demo.service;
 
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.model.Item;
-import com.eiummarket.demo.model.Market;
 import com.eiummarket.demo.model.Shop;
 import com.eiummarket.demo.repository.ItemRepository;
 import com.eiummarket.demo.repository.ShopRepository;
@@ -12,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static com.eiummarket.demo.model.Item.*;
 
