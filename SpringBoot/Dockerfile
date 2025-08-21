@@ -1,29 +1,28 @@
-# SpringBoot/Dockerfile (Final & Safest Version)
+# SpringBoot/Dockerfile (Optimized Version)
 
 # --- Build Stage ---
-# 가장 범용적인 Gradle 이미지를 사용합니다.
 FROM gradle:jdk21 AS builder
+WORKDIR /app
 
-# 소스코드 전체를 복사할 명시적인 디렉토리를 만듭니다.
-WORKDIR /sourcecode
+# 1. 의존성 정보가 담긴 파일들만 먼저 복사합니다.
+# 이 파일들이 변경되지 않는 한, 아래 RUN 명령어는 캐시를 사용하게 됩니다.
+COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+COPY gradlew ./
 
-# COPY . . 대신, 더 명시적으로 모든 것을 복사합니다.
-COPY . .
+# 2. 의존성을 미리 다운로드하여 별도의 레이어에 캐시합니다. (핵심)
+# 이 명령어는 소스 코드가 없어도 의존성만 다운로드할 수 있습니다.
+RUN ./gradlew dependencies --info
 
-# Gradle 빌드를 실행합니다.
-# 만약 build.gradle에 문제가 없다면, JAR 파일은 /sourcecode/build/libs/ 에 생성됩니다.
-RUN chmod +x ./gradlew && ./gradlew build -x test
+# 3. 자주 변경되는 소스 코드는 나중에 복사합니다.
+# 이 부분만 변경되면, 위 단계들은 캐시를 사용하므로 매우 빠르게 넘어갑니다.
+COPY src ./src
+
+# 4. 이제 컴파일만 빠르게 수행합니다.
+RUN ./gradlew build -x test
 
 # --- Runtime Stage ---
 FROM eclipse-temurin:21-jre
-
-# 실행을 위한 별도의 디렉토리를 만듭니다.
 WORKDIR /app
-
-# builder 스테이지의 /sourcecode/build/libs/ 디렉토리에서
-# 이름이 무엇이든 상관없이 .jar로 끝나는 첫 번째 파일을 app.jar로 복사합니다.
-# 이 방법이 가장 강력하고 확실하게 JAR 파일을 찾아 복사합니다.
-COPY --from=builder /sourcecode/build/libs/*.jar app.jar
-
-# 최종적으로 /app/app.jar 파일을 실행합니다.
+COPY --from=builder /app/build/libs/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
