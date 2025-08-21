@@ -1,136 +1,27 @@
-# app.py
 import os
 import base64
 import requests
 import json
-from flask import Flask, request, Response, jsonify, render_template_string
+from flask import Flask, request, Response, jsonify
 
-# Flask 앱 인스턴스 생성
 app = Flask(__name__)
-
-# HTML 템플릿: 이미지 생성 폼과 설명을 포함합니다.
-INDEX_HTML = """
-<!doctype html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8">
-  <title>Gemini 이미지 생성</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-    form { margin-bottom: 20px; }
-    textarea { width: 80%; max-width: 600px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-    button { padding: 10px 20px; font-size: 16px; border: none; border-radius: 8px; background-color: #4285F4; color: white; cursor: pointer; }
-    button:hover { background-color: #357ae8; }
-    .image-container { margin-top: 20px; }
-    .image-container img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    .error-message { color: red; margin-top: 20px; }
-    #download-btn { margin-top: 10px; display: none; } /* 처음에는 숨겨져 있음 */
-  </style>
-</head>
-<body>
-  <h1>Gemini 이미지 생성 (1024x1024)</h1>
-  <form id="image-form">
-    <textarea name="prompt" rows="4" cols="60" placeholder="프롬프트를 입력하세요 (예: 푸른 하늘 아래 활짝 핀 해바라기 밭)"></textarea><br/><br/>
-    <button type="submit">생성</button>
-  </form>
-  <div class="image-container">
-    <img id="generated-image" alt="생성된 이미지">
-  </div>
-  <a id="download-btn" href="#">이미지 다운로드</a>
-  <div class="error-message" id="message"></div>
-
-  <script>
-    document.getElementById('image-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const prompt = document.querySelector('textarea[name="prompt"]').value;
-      const messageElement = document.getElementById('message');
-      const imageElement = document.getElementById('generated-image');
-      const downloadButton = document.getElementById('download-btn');
-
-      if (!prompt.trim()) {
-        messageElement.textContent = "프롬프트가 비어 있습니다.";
-        imageElement.src = '';
-        downloadButton.style.display = 'none';
-        return;
-      }
-
-      messageElement.textContent = "이미지를 생성하는 중입니다. 잠시만 기다려 주세요...";
-      imageElement.src = '';
-      downloadButton.style.display = 'none';
-
-      try {
-        const response = await fetch('/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: prompt })
-        });
-
-        if (response.ok) {
-          const blob = await response.blob();
-          const imageUrl = URL.createObjectURL(blob);
-          imageElement.src = imageUrl;
-          downloadButton.href = imageUrl; // 다운로드 버튼에 이미지 URL 설정
-          downloadButton.download = "generated_image.png"; // 다운로드 파일명 설정
-          downloadButton.style.display = 'block'; // 버튼 표시
-          messageElement.textContent = "이미지 생성이 완료되었습니다.";
-        } else {
-          const errorData = await response.json();
-          messageElement.textContent = "오류 발생: " + (errorData.error || "알 수 없는 오류");
-        }
-      } catch (error) {
-        messageElement.textContent = "네트워크 오류가 발생했습니다: " + error.message;
-      }
-    });
-  </script>
-</body>
-</html>
-"""
-
-# Flask 앱 인스턴스 생성
-app = Flask(__name__)
-
-# Gemini API 키를 환경 변수에서 로드합니다.
 app.config['SECRET_KEY'] = os.environ.get("GEMINI_API_KEY")
 
-@app.route("/", methods=["GET"])
-def index():
-    return render_template_string(INDEX_HTML)
+GEMINI_IMAGE_MODEL = "gemini-2.0-flash-preview-image-generation"
+GEMINI_TEXT_MODEL = "gemini-2.5-flash"
+BASE_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
-@app.route("/generate-image", methods=["POST"])
-def generate_image():
+def generate_image_from_prompt(prompt):
     try:
-        data = request.get_json(silent=True) or {}
-        prompt = data.get("prompt", "").strip()
-        if not prompt:
-            return jsonify({"error": "prompt가 비어 있습니다."}), 400
-
-        # gemini-2.0-flash-preview-image-generation 모델의 API 엔드포인트
-        api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={app.config['SECRET_KEY']}"
-
-        # 요청 페이로드
+        api_url = f"{BASE_GEMINI_URL}/{GEMINI_IMAGE_MODEL}:generateContent?key={app.config['SECRET_KEY']}"
         payload = {
-            "contents": [{
-                "parts": [{"text": prompt}]
-            }],
-            "generationConfig": {
-                "responseModalities": ["IMAGE", "TEXT"]
-            }
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
         }
-
-        # API 호출
-        response = requests.post(
-            api_url,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(payload)
-        )
-
-        # 응답 상태 코드 확인
+        response = requests.post(api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
         response.raise_for_status()
-        
-        # JSON 응답에서 이미지 데이터 추출
         result = response.json()
-        
-        # 응답 구조를 수정하여 'content' 필드에 접근합니다.
+
         if "candidates" in result and result["candidates"] and "content" in result["candidates"][0]:
             parts = result["candidates"][0]["content"].get("parts", [])
             for part in parts:
@@ -138,14 +29,70 @@ def generate_image():
                     b64_data = part["inlineData"]["data"]
                     binary_data = base64.b64decode(b64_data)
                     return Response(binary_data, mimetype="image/png")
-
-        # 모든 후보를 확인했음에도 이미지 데이터를 찾지 못한 경우
+        
         return jsonify({"error": "API 응답에서 이미지 데이터를 찾을 수 없습니다."}), 500
 
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": f"API 요청 실패: {e}"}), 500
+    except requests.exceptions.HTTPError as e:
+        return jsonify({"error": f"API 호출 실패 (HTTP 상태 코드: {e.response.status_code})", "details": e.response.text}), e.response.status_code
     except Exception as e:
-        return jsonify({"error": f"예상치 못한 오류 발생: {e}"}), 500
+        return jsonify({"error": f"이미지 생성 중 예상치 못한 오류 발생: {e}"}), 500
+
+def generate_text_from_prompt(prompt):
+    try:
+        api_url = f"{BASE_GEMINI_URL}/{GEMINI_TEXT_MODEL}:generateContent?key={app.config['SECRET_KEY']}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseModalities": ["TEXT"]}
+        }
+        response = requests.post(api_url, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+        response.raise_for_status()
+        result = response.json()
+
+        if "candidates" in result and result["candidates"] and "content" in result["candidates"][0]:
+            parts = result["candidates"][0]["content"].get("parts", [])
+            for part in parts:
+                if "text" in part:
+                    # Gemini가 생성한 텍스트에서 JSON 부분만 추출
+                    json_text = part["text"].strip().replace("```json", "").replace("```", "")
+                    try:
+                        return jsonify(json.loads(json_text))
+                    except json.JSONDecodeError:
+                        return jsonify({"error": "API 응답이 유효한 JSON 형식이 아닙니다.", "raw_response": part["text"]}), 500
+                        
+        return jsonify({"error": "API 응답에서 텍스트 데이터를 찾을 수 없습니다."}), 500
+
+    except requests.exceptions.HTTPError as e:
+        return jsonify({"error": f"API 호출 실패 (HTTP 상태 코드: {e.response.status_code})", "details": e.response.text}), e.response.status_code
+    except Exception as e:
+        return jsonify({"error": f"텍스트 생성 중 예상치 못한 오류 발생: {e}"}), 500
+
+@app.route("/image/product", methods=["GET"])
+def generate_product_image():
+    name = request.args.get("name")
+    if not name:
+        return jsonify({"error": "name 파라미터가 필요합니다."}), 400
+
+    prompt = f"성남시에 있는 시장에서 파는 '{name}' 상품의 사실적인 사진, 흰색 배경 (photorealistic, white background)"
+    return generate_image_from_prompt(prompt)
+
+@app.route("/image/market", methods=["GET"])
+def generate_market_image():
+    title = request.args.get("title")
+    description = request.args.get("description")
+    if not title or not description:
+        return jsonify({"error": "title과 description 파라미터가 모두 필요합니다."}), 400
+    
+    prompt = f"성남시에 있는 전통 시장에 있는 '{title}'이라는 가게. 가게 특징은 '{description}'. 이 가게의 전면을 보여주는 사실적인 사진, 가게 이름 간판 포함 (photorealistic, front view of the store, including the store name sign)"
+    return generate_image_from_prompt(prompt)
+
+@app.route("/text/description", methods=["GET"])
+def generate_store_description():
+    title = request.args.get("title")
+    if not title:
+        return jsonify({"error": "title 파라미터가 필요합니다."}), 400
+    
+    prompt = f"'{title}' 이라는 상점명을 가진 가게가 있습니다. 이 가게의 'category'와 'description'을 JSON 객체 형식으로 생성해 주세요. category는 한 단어의 명사, description은 50자 이내의 한 문장으로, 모두 한국어로 작성해주세요. 예시: {{ \"category\": \"반찬가게\", \"description\": \"매일 아침 신선한 재료로 만드는 정성 가득한 수제 반찬 전문점입니다.\" }}"
+    return generate_text_from_prompt(prompt)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
