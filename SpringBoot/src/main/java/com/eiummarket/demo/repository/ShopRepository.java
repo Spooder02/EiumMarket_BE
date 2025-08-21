@@ -32,4 +32,10 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
     List<Shop> findByNameContainingIgnoreCase(String keyword);
     List<Shop> findByCategoryContainingIgnoreCase(String keyword);
 
+    // 시장 내 특정 상점(소유 검증)
+    Optional<Shop> findByMarket_MarketIdAndShopId(Long marketId, Long shopId);
+
+    // 필요 시 중복 이름 방지 등 추가 가능
+    boolean existsByMarket_MarketIdAndName(Long marketId, String name);
+
 }

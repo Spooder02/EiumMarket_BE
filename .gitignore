@@ -2,3 +2,5 @@ venv
 /Flask/__pycache__/
 EiumMarket.code-workspace
 **/.DS_Store
+/Flask/.env
+.env

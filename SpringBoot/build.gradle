@@ -44,3 +44,11 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+jar {
+	enabled = true // 혹시 jar 생성을 막는 설정이 있는지 확인
+}
+
+bootJar {
+	enabled = true // 혹시 bootJar 생성을 막는 설정이 있는지 확인
+}
