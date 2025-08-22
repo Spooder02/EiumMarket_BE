@@ -71,4 +71,13 @@ public class ShopController {
         shopService.deleteShop(marketId, shopId);
         return ResponseEntity.noContent().build();
     }
+    /** AI 관련 API */
+   @GetMapping("/{shopId}/ai/description")
+   public ResponseEntity<String> getShopItemDescription(@PathVariable Long marketId,
+                                                        @PathVariable Long shopId,
+                                                        @RequestParam String shopName) {
+
+       String description = shopService.getShopItemDescription(marketId, shopId, shopName);
+       return ResponseEntity.ok(description);
+   }
 }

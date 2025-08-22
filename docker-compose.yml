@@ -27,6 +27,9 @@ services:
       - flask-service
     environment:
       - FLASK_INTERNAL_URL=http://flask-service:5000
+    volumes:
+      - ./SpringBoot/build/classes:/app/classes
+      - ./SpringBoot/build/resources:/app/resources
 
   # Flask - 내부용
   flask-service:
@@ -34,6 +37,13 @@ services:
       context: ./Flask
       dockerfile: Dockerfile
     container_name: eium-flask-app
+    volumes:
+      - ./Flask:/app
+    environment:
+      - FLASK_ENV=development
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - ./.env
   db:
     image: mysql:8.0
     container_name: mysql-db
