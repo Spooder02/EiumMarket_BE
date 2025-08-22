@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -49,4 +51,13 @@ public class Market {
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")
     @Schema(description = "시장 정보 생성 일시", example = "2025-08-13T20:15:30")
     private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "market", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Shop> shops = new ArrayList<>();
+
+    @OneToMany(mappedBy = "market", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<MarketImage> images = new ArrayList<>();
+
 }

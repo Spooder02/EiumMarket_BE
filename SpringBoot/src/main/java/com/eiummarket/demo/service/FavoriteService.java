@@ -1,5 +1,6 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ShopDto;
 import com.eiummarket.demo.model.Favorite;
 import com.eiummarket.demo.model.Shop;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,30 +26,46 @@ public class FavoriteService {
     @Transactional
     public void likeShop(Long shopId, Integer userId) {
         if (favoriteRepository.existsByShop_ShopIdAndUserId(shopId, userId)) return;
+
         Shop shop = shopRepository.findById(shopId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId));
         favoriteRepository.save(Favorite.builder().shop(shop).userId(userId).build());
+        // 카운트 +1
+        shopRepository.incrementFavoriteCount(shopId);
     }
 
     @Transactional
     public void unlikeShop(Long shopId, Integer userId) {
-        favoriteRepository.deleteByShop_ShopIdAndUserId(shopId, userId);
+        long deleted = favoriteRepository.deleteByShop_ShopIdAndUserId(shopId, userId);
+        if (deleted > 0) {
+            shopRepository.decrementFavoriteCount(shopId);
+        }
+
     }
 
     public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
-        return shopRepository.findFavoriteShopsByUsername(userId, marketId, pageable)
-                .map(s -> ShopDto.Response.builder()
-                        .shopId(s.getShopId())
-                        .marketId(s.getMarket().getMarketId())
-                        .name(s.getName())
-                        .category(s.getCategory())
-                        .phoneNumber(s.getPhoneNumber())
-                        .openingHours(s.getOpeningHours())
-                        .floor(s.getFloor())
-                        .latitude(s.getLatitude())
-                        .longitude(s.getLongitude())
-                        .description(s.getDescription())
-                        .createdAt(s.getCreatedAt())
-                        .build());
+        return shopRepository.findFavoriteShopsByUserId(userId, marketId, pageable)
+                .map(this::toResponse);
+    }
+
+    private ShopDto.Response toResponse(Shop shop) {
+        return ShopDto.Response.builder()
+                .shopId(shop.getShopId())
+                .marketId(shop.getMarket().getMarketId())
+                .name(shop.getName())
+                .phoneNumber(shop.getPhoneNumber())
+                .openingHours(shop.getOpeningHours())
+                .floor(shop.getFloor())
+                .latitude(shop.getLatitude())
+                .longitude(shop.getLongitude())
+                .description(shop.getDescription())
+                .createdAt(shop.getCreatedAt())
+                .categories(shop.getCategories().stream()
+                        .map(cat -> CategoryDto.Response.builder()
+                                .categoryId(cat.getCategoryId())
+                                .name(cat.getName())
+                                .build())
+                        .collect(Collectors.toList()))
+                .build();
     }
 }

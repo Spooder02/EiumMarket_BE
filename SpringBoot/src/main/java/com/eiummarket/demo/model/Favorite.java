@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "favorite",
-        uniqueConstraints = @UniqueConstraint(name = "uk_favorite_shop_user", columnNames = {"shop_id","username"}))
+        uniqueConstraints = @UniqueConstraint(name = "uk_favorite_shop_user", columnNames = {"shop_id","username_id"}))
 @Schema(name = "Favorite", description = "사용자가 찜한 가게를 나타내는 엔티티")
 public class Favorite {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "favorite_id")
+    @Column(name = "favorite")
     @Schema(description = "즐겨찾기 고유 ID", example = "1")
     private Long favoriteId;
 
