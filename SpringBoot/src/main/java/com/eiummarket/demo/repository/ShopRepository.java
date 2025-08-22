@@ -53,8 +53,7 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
            """)
     int decrementFavoriteCount(@Param("shopId") Long shopId);
 
-
-
+    Page<Shop> findFavoriteShopsByUserId(Long userId, Long marketId, Pageable pageable);
 
     // 필요 시 중복 이름 방지 등 추가 가능
     boolean existsByMarket_MarketIdAndName(Long marketId, String name);

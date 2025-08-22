@@ -44,8 +44,11 @@ public class FavoriteService {
     }
 
     public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
-        return shopRepository.findFavoriteShopsByUserId(userId, marketId, pageable)
-                .map(this::toResponse);
+        Page<Favorite> favoritePage = favoriteRepository.findByUserIdAndShopMarketMarketId(userId, marketId, pageable);
+
+        Page<Shop> shopPage = favoritePage.map(Favorite::getShop);
+        
+        return shopPage.map(this::toResponse);
     }
 
     private ShopDto.Response toResponse(Shop shop) {
