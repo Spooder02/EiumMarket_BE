@@ -4,15 +4,32 @@ import com.eiummarket.demo.Utils.SearchUtils;
 import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
+
+import com.eiummarket.demo.model.Item;
+import com.eiummarket.demo.model.Market;
+import com.eiummarket.demo.model.Shop;
+import com.eiummarket.demo.repository.ItemRepository;
+import com.eiummarket.demo.repository.MarketRepository;
+import com.eiummarket.demo.repository.ShopRepository;
+
 import com.eiummarket.demo.model.*;
 import com.eiummarket.demo.repository.*;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import org.springframework.http.HttpStatus;
+
 import org.springframework.data.domain.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +55,8 @@ public class ShopService {
     private final ItemRepository itemRepository;
     private final FileStorageService fileStorageService;
 
+
+    private final WebClient webClient;
 
     /**
      * 상점 생성
@@ -210,4 +229,22 @@ public class ShopService {
                 .build();
     }
 
+    /**
+     * AI 관련 API
+     */
+
+    public String getShopItemDescription(Long marketId, Long shopId, String shopName) {
+        Mono<String> responseMono = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/text/description")
+                        .queryParam("title", shopName)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class);
+
+        return responseMono.block();
     }
+}
+
+    }
+
