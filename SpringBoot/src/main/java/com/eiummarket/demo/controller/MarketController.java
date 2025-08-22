@@ -28,7 +28,7 @@ public class MarketController {
 
     private final MarketService marketService;
 
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "시장 등록하기", description = "시장 정보를 신규 등록합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공",
             content = @Content(schema = @Schema(implementation = MarketDto.Response.class)))
@@ -49,7 +49,7 @@ public class MarketController {
         return ResponseEntity.ok(marketService.list(pageable));
     }
 
-    @PatchMapping("/{marketId}")
+    @PatchMapping(value = "/{marketId}", consumes = {"multipart/form-data"})
     @Operation(summary = "시장 부분 수정", description = "전달된 필드만 부분 업데이트합니다.")
     public ResponseEntity<MarketDto.Response> update(@PathVariable Long marketId,
                                                      @Valid @RequestBody MarketDto.UpdateRequest req) {
