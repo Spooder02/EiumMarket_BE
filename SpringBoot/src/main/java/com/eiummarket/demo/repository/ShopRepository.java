@@ -24,16 +24,6 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
 
     Page<Shop> findAllByMarket_MarketIdAndCategoriesContaining(Long marketId, Category category, Pageable pageable);
 
-    // 즐겨찾기(찜) 사용자 필터로 상점 목록
-    @Query("""
-           select f.shop
-             from Favorite f
-            where f.userDeviceId = :userDeviceId
-              and (:marketId is null or f.shop.market.marketId = :marketId)
-           """)
-    Page<Shop> findFavoriteShopsByUserDeviceId(@Param("userDeviceId") Integer userDeviceId,
-                                         @Param("marketId") Long marketId,
-                                         Pageable pageable);
 
     Page<Shop> findByNameContaining(String keyword, Pageable pageable);
     Page<Shop> findByDescriptionContaining(String keyword, Pageable pageable);
@@ -52,8 +42,6 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
            where s.shopId = :shopId
            """)
     int decrementFavoriteCount(@Param("shopId") Long shopId);
-
-    Page<Shop> findFavoriteShopsByUserId(Long userId, Long marketId, Pageable pageable);
 
     // 필요 시 중복 이름 방지 등 추가 가능
     boolean existsByMarket_MarketIdAndName(Long marketId, String name);
