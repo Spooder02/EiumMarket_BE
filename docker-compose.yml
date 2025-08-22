@@ -23,15 +23,16 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - db
-      - flask-service
+      db:
+        condition: service_healthy
+      flask-service:
+        condition: service_started
     environment:
       - FLASK_INTERNAL_URL=http://flask-service:5000
     volumes:
       - ./SpringBoot/build/classes:/app/classes
       - ./SpringBoot/build/resources:/app/resources
 
-  # Flask - 내부용
   flask-service:
     build:
       context: ./Flask
@@ -56,6 +57,11 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db-data:
