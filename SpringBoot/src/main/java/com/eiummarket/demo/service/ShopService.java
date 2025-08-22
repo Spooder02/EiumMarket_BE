@@ -1,22 +1,31 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.Utils.SearchUtils;
 import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
-import com.eiummarket.demo.model.Category;
-import com.eiummarket.demo.model.Market;
-import com.eiummarket.demo.model.Shop;
+import com.eiummarket.demo.model.*;
 import com.eiummarket.demo.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.eiummarket.demo.Utils.SearchUtils.addAll;
+import static com.eiummarket.demo.Utils.SearchUtils.sortByPageable;
+import static java.util.Collections.list;
 
 @Service
 @RequiredArgsConstructor
@@ -25,8 +34,10 @@ public class ShopService {
 
     private final ShopRepository shopRepository;
     private final MarketRepository marketRepository;
-    private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
+    private final ItemRepository itemRepository;
+    private final FileStorageService fileStorageService;
+
 
     /**
      * 상점 생성
@@ -54,7 +65,6 @@ public class ShopService {
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .description(request.getDescription())
-                .shopImageUrl(request.getShopImageUrl())
                 .address(request.getAddress())
                 .favoriteCount(0L)
                 .build();
@@ -97,24 +107,29 @@ public class ShopService {
     @Transactional
     public ShopDto.Response updateShop(Long marketId, Long shopId, ShopDto.UpdateRequest request) {
         Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
-                .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
+                .orElseThrow(() -> new IllegalArgumentException("해당 마켓에 속한 상점이 없습니다. marketId=" + marketId + ", shopId=" + shopId));
 
-        if (request.getName() != null) shop.setName(request.getName());
-        if (request.getCategoryIds() != null) {
-            List<Category> categories = categoryRepository.findAllById(request.getCategoryIds());
-            if (categories.size() != request.getCategoryIds().size()) {
-                throw new IllegalArgumentException("일부 카테고리가 존재하지 않습니다.");
-            }
-            shop.setCategories(categories);
+        Optional.ofNullable(request.getName()).ifPresent(shop::setName);
+        Optional.ofNullable(request.getDescription()).ifPresent(shop::setDescription);
+
+        // 이미지 개별 삭제
+        if (request.getImageIds() != null) {
+            shop.getImages().removeIf(img -> request.getImageIds().contains(img.getShopImageId()));
         }
-        if (request.getPhoneNumber() != null) shop.setPhoneNumber(request.getPhoneNumber());
-        if (request.getOpeningHours() != null) shop.setOpeningHours(request.getOpeningHours());
-        if (request.getFloor() != null) shop.setFloor(request.getFloor());
-        if (request.getLatitude() != null) shop.setLatitude(request.getLatitude());
-        if (request.getLongitude() != null) shop.setLongitude(request.getLongitude());
-        if (request.getDescription() != null) shop.setDescription(request.getDescription());
-        if (request.getShopImageUrl() != null) shop.setShopImageUrl(request.getShopImageUrl());
-        if (request.getAddress() != null) shop.setAddress(request.getAddress());
+        // 이미지 파일 개별 추가
+        if (request.getImageFiles() != null) {
+            for (MultipartFile f : request.getImageFiles()) {
+                String url = fileStorageService.storeFile(f);
+                if (url != null) shop.getImages().add(ShopImage.builder().shop(shop).url(url).build());
+            }
+        }
+        // 이미지 URL 개별 추가
+        if (request.getImageUrls() != null) {
+            for (String url : request.getImageUrls()) {
+                boolean exists = shop.getImages().stream().anyMatch(img -> img.getUrl().equals(url));
+                if (!exists) shop.getImages().add(ShopImage.builder().shop(shop).url(url).build());
+            }
+        }
 
         return toResponse(shop);
     }
@@ -130,37 +145,20 @@ public class ShopService {
         shopRepository.delete(shop);
     }
 
-    @Transactional(readOnly = true)
-    public Page<ShopDto.Response> search(String keyword, Pageable pageable) {
-        String sanitized = (keyword == null) ? "" : keyword.trim();
-        if (sanitized.isBlank()) {
-            return shopRepository.findAll(pageable).map(this::toResponse);
+    public Page<ShopDto.Response> search(Long marketId, String keyword, Pageable pageable) {
+        String sanitized = SearchUtils.sanitize(keyword);
+        if (sanitized == null) {
+            return shopRepository.findAllByMarket_MarketId(marketId, pageable).map(this::toResponse);
         }
-
-        String lowered = sanitized.toLowerCase(Locale.ROOT);
-        String escaped = lowered
-                .replace("\\", "\\\\")
-                .replace("%", "\\%")
-                .replace("_", "\\_");
-        String pattern = "%" + escaped + "%";
 
         int cap = Math.max(pageable.getPageSize() * 5, 100);
         Pageable probe = PageRequest.of(0, cap);
 
-        List<Shop> byName = shopRepository
-                .findByNameContaining(sanitized, probe)
-                .getContent();
-        List<Shop> byDesc = shopRepository
-                .findByDescriptionContaining(sanitized, probe)
-                .getContent();
-
-        List<Shop> byCategory = categoryRepository
-                .findShopsByCategoryNameLike(pattern, probe)
-                .getContent();
-
-        List<Shop> byItem = itemRepository
-                .findShopsByItemKeywordLike(pattern, probe)
-                .getContent();
+        // marketId로 먼저 필터링 후 키워드 검색
+        List<Shop> byName = shopRepository.findByMarket_MarketIdAndNameContaining(marketId, sanitized, probe).getContent();
+        List<Shop> byDesc = shopRepository.findByMarket_MarketIdAndDescriptionContaining(marketId, sanitized, probe).getContent();
+        List<Shop> byCategory = categoryRepository.findShopsByMarketIdAndCategoryNameLike(marketId, sanitized, probe).getContent();
+        List<Shop> byItem = itemRepository.findShopsByMarketIdAndItemKeyword(marketId, sanitized, probe).getContent();
 
         Map<Long, Shop> merged = new LinkedHashMap<>();
         addAll(merged, byName);
@@ -176,113 +174,40 @@ public class ShopService {
         int end = Math.min(start + pageable.getPageSize(), total);
         List<Shop> slice = (start >= total) ? List.of() : all.subList(start, end);
 
-        List<ShopDto.Response> content = slice.stream()
-                .map(this::toResponse)
-                .toList();
-
-        return new PageImpl<>(content, pageable, total);
+        return new PageImpl<>(slice.stream().map(this::toResponse).toList(), pageable, total);
     }
 
-    private void addAll(Map<Long, Shop> target, List<Shop> source) {
-        for (Shop s : source) target.putIfAbsent(s.getShopId(), s);
-    }
 
-    private void sortByPageable(List<Shop> list, Pageable pageable) {
-        if (pageable == null || pageable.getSort().isUnsorted()) {
-            list.sort(
-                    Comparator.comparing(
-                            Shop::getName,
-                            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
-                    ).thenComparing(
-                            Shop::getShopId,
-                            Comparator.nullsLast(Long::compareTo)
-                    )
-            );
-            return;
-        }
+//    /** FavoriteService에서 재사용할 수 있도록 별도 노출 */
+//    public ShopDto.Response toResponseForFavorite(Shop shop) {
+//        return toResponse(shop);
+//    }
 
-        Comparator<Shop> comp = null;
-
-        for (Sort.Order order : pageable.getSort()) {
-            Comparator<Shop> c = switch (order.getProperty()) {
-                case "favoriteCount" -> Comparator.comparingLong(
-                        s -> s.getFavoriteCount() == null ? 0L : s.getFavoriteCount()
-                );
-                case "name" -> Comparator.comparing(
-                        Shop::getName,
-                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
-                );
-                case "createdAt" -> Comparator.comparing(
-                        Shop::getCreatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                );
-                default -> null;
-            };
-
-            if (c != null) {
-                if (order.isDescending()) c = c.reversed();
-                comp = (comp == null) ? c : comp.thenComparing(c);
-            }
-        }
-        if (comp == null) {
-            comp = Comparator.comparing(
-                    Shop::getName,
-                    Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
-            ).thenComparing(
-                    Shop::getShopId,
-                    Comparator.nullsLast(Long::compareTo)
-            );
-        } else {
-            comp = comp.thenComparing(
-                    Shop::getShopId,
-                    Comparator.nullsLast(Long::compareTo)
-            );
-        }
-
-        list.sort(comp);
-    }
-
-    /**
-     * 엔티티 → DTO 변환
-     */
+    /** 엔티티→DTO 변환 */
     private ShopDto.Response toResponse(Shop shop) {
-        // Item 엔티티를 ItemDto.Response로 변환하는 로직
-        List<ItemDto.Response> itemDtos = shop.getItems().stream()
-                .map(item -> ItemDto.Response.builder()
-                        .itemId(item.getItemId())
-                        .shopId(item.getShop().getShopId())
-                        .name(item.getName())
-                        .price(item.getPrice())
-                        .category(item.getCategory())
-                        .description(item.getDescription())
+        var itemDtos = shop.getItems().stream().map(item ->
+                ItemDto.Response.builder()
+                        .itemId(item.getItemId()).shopId(shop.getShopId())
+                        .name(item.getName()).price(item.getPrice())
+                        .category(item.getCategory()).description(item.getDescription())
                         .createdAt(item.getCreatedAt())
-                        .build())
-                .collect(Collectors.toList());
+                        .imageUrls(item.getImages().stream().map(ItemImage::getUrl).toList())
+                        .build()
+        ).toList();
 
-        List<CategoryDto.Response> categoryDtos = shop.getCategories().stream()
-                .map(cat -> CategoryDto.Response.builder()
-                        .categoryId(cat.getCategoryId())
-                        .name(cat.getName())
-                        .build())
-                .collect(Collectors.toList());
+        var categoryDtos = shop.getCategories().stream().map(cat ->
+                CategoryDto.Response.builder().categoryId(cat.getCategoryId()).name(cat.getName()).build()
+        ).toList();
 
         return ShopDto.Response.builder()
-                .shopId(shop.getShopId())
-                .marketId(shop.getMarket().getMarketId())
-                .name(shop.getName())
-                .shopImageUrl(shop.getShopImageUrl())
-                .address(shop.getAddress())
-                .phoneNumber(shop.getPhoneNumber())
-                .openingHours(shop.getOpeningHours())
-                .floor(shop.getFloor())
-                .latitude(shop.getLatitude())
-                .longitude(shop.getLongitude())
-                .description(shop.getDescription())
-                .createdAt(shop.getCreatedAt())
+                .shopId(shop.getShopId()).marketId(shop.getMarket().getMarketId()).name(shop.getName())
+                .address(shop.getAddress()).phoneNumber(shop.getPhoneNumber()).openingHours(shop.getOpeningHours())
+                .floor(shop.getFloor()).latitude(shop.getLatitude()).longitude(shop.getLongitude())
+                .description(shop.getDescription()).createdAt(shop.getCreatedAt())
                 .favoriteCount(shop.getFavoriteCount())
-                .items(itemDtos)
-                .categories(categoryDtos)
+                .items(itemDtos).categories(categoryDtos)
+                .imageUrls(shop.getImages().stream().map(ShopImage::getUrl).toList())
                 .build();
     }
 
-}
+    }

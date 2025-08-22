@@ -36,10 +36,6 @@ public class Shop {
     @Schema(description = "상점 이름", example = "김밥천국", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    @Column(name = "shop_image_url")
-    @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
-    private String shopImageUrl;
-
     @Column(name = "phone_number", length = 20)
     @Schema(description = "상점 전화번호", example = "02-123-4567")
     private String phoneNumber;
@@ -69,8 +65,8 @@ public class Shop {
     @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
     private String description;
 
-    @BatchSize(size=10)
-    @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY)
+    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Item> items = new ArrayList<>();
 
@@ -79,17 +75,24 @@ public class Shop {
     private Long favoriteCount;
 
     @ManyToMany
-    @JoinTable(
-            name = "shop_categories",
+    @JoinTable(name = "shop_categories",
             joinColumns = @JoinColumn(name = "shop_id"),
-            inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
     @Builder.Default
-    @Schema(description = "카테고리 목록")
     private List<Category> categories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ShopImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "shop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "timestamp default current_timestamp")
     @Schema(description = "상점 정보 생성 일시", example = "2025-08-13T20:15:30")
     private LocalDateTime createdAt;
+
+
 }

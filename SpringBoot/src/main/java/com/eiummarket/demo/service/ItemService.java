@@ -2,7 +2,9 @@ package com.eiummarket.demo.service;
 
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.model.Item;
+import com.eiummarket.demo.model.ItemImage;
 import com.eiummarket.demo.model.Shop;
+import com.eiummarket.demo.repository.ItemImageRepository;
 import com.eiummarket.demo.repository.ItemRepository;
 import com.eiummarket.demo.repository.ShopRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import static com.eiummarket.demo.model.Item.*;
 
@@ -19,8 +22,10 @@ import static com.eiummarket.demo.model.Item.*;
 @Transactional
 public class ItemService {
 
+
     private final ItemRepository itemRepository;
     private final ShopRepository shopRepository;
+    private final FileStorageService fileStorageService;
 
     public ItemDto.Response createItem(ItemDto.CreateRequest request) {
         Shop shop = shopRepository.findById(request.getShopId())
@@ -32,11 +37,22 @@ public class ItemService {
                 .price(request.getPrice())
                 .category(request.getCategory())
                 .description(request.getDescription())
-                .itemImageUrl(request.getItemImageUrl())
                 .build();
 
-        Item savedItem = itemRepository.save(item);
-        return toResponse(savedItem);
+        Item saved = itemRepository.save(item);
+        if (request.getImageFiles() != null) {
+            for (MultipartFile f : request.getImageFiles()) {
+                String url = fileStorageService.storeFile(f);
+                if (url != null) saved.getImages().add(ItemImage.builder().item(saved).url(url).build());
+            }
+        }
+        if (request.getImageUrls() != null) {
+            for (String url : request.getImageUrls()) {
+                saved.getImages().add(ItemImage.builder().item(saved).url(url).build());
+            }
+        }
+
+        return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
@@ -54,8 +70,28 @@ public class ItemService {
         if (request.getPrice() != null) item.setPrice(request.getPrice());
         if (request.getCategory() != null) item.setCategory(request.getCategory());
         if (request.getDescription() != null) item.setDescription(request.getDescription());
-        if (request.getItemImageUrl() != null) item.setItemImageUrl(request.getItemImageUrl());
 
+        // 이미지 삭제
+        if (request.getImageIds() != null) {
+            for (Long imageId : request.getImageIds()) {
+                item.getImages().removeIf(img -> img.getItemImageId().equals(imageId));
+            }
+        }
+
+        // 이미지 파일 추가
+        if (request.getImageFiles() != null) {
+            for (MultipartFile f : request.getImageFiles()) {
+                String url = fileStorageService.storeFile(f);
+                if (url != null) item.getImages().add(ItemImage.builder().item(item).url(url).build());
+            }
+        }
+        // 이미지 URL 추가
+        if (request.getImageUrls() != null) {
+            for (String url : request.getImageUrls()) {
+                boolean exists = item.getImages().stream().anyMatch(img -> img.getUrl().equals(url));
+                if (!exists) item.getImages().add(ItemImage.builder().item(item).url(url).build());
+            }
+        }
 
         return toResponse(item);
     }
@@ -66,6 +102,7 @@ public class ItemService {
         }
         itemRepository.deleteById(itemId);
     }
+
     public Page<ItemDto.Response> listByShop(Long marketId, Long shopId, Pageable pageable) {
         Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
                 .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId + ", MarketID=" + marketId));
@@ -81,8 +118,8 @@ public class ItemService {
                 .price(item.getPrice())
                 .category(item.getCategory())
                 .description(item.getDescription())
-                .itemImageUrl(item.getItemImageUrl())
                 .createdAt(item.getCreatedAt())
+                .imageUrls(item.getImages().stream().map(ItemImage::getUrl).toList())
                 .build();
     }
 }

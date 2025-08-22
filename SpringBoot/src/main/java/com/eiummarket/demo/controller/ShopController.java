@@ -37,7 +37,7 @@ public class ShopController {
         return ResponseEntity.ok(shopService.getShops(marketId, category, pageable));
     }
     // 시장 내 상점 등록
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     @Operation(summary = "상점 등록", description = "시장 내 새로운 상점을 등록합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공",
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
@@ -55,7 +55,7 @@ public class ShopController {
         return ResponseEntity.ok(shopService.getShop(marketId, shopId));
     }
     // 가게 정보 수정
-    @PutMapping("/{shopId}")
+    @PatchMapping(value = "/{shopId}", consumes = {"multipart/form-data"})
     @Operation(summary = "가게 정보 수정", description = "상점의 전체 정보를 수정합니다.")
     public ResponseEntity<ShopDto.Response> updateShop(
             @PathVariable Long marketId,

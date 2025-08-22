@@ -23,14 +23,14 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    @PostMapping("/markets/{marketId}/shops/{shopId}/items")
+    @PostMapping(value="/markets/{marketId}/shops/{shopId}/items", consumes = {"multipart/form-data"})
     @Operation(summary = "상품 생성", description = "새로운 상품을 등록합니다.")
     public ResponseEntity<ItemDto.Response> createItem(@RequestBody ItemDto.CreateRequest request) {
         return ResponseEntity.ok(itemService.createItem(request));
     }
 
     @GetMapping("/markets/{marketId}/shops/{shopId}/items/{itemId}")
-    @Operation(summary = "상품 조회", description = "상품 ID로 상품 정보를 조회합니다.")
+    @Operation(summary = "상품 상세 조회", description = "상품 ID로 상품 정보를 조회합니다.")
     public ResponseEntity<ItemDto.Response> getItem(@PathVariable Long itemId) {
         return ResponseEntity.ok(itemService.getItem(itemId));
     }
@@ -44,7 +44,7 @@ public class ItemController {
         return ResponseEntity.ok(itemService.listByShop(marketId, shopId, pageable));
     }
 
-    @PutMapping("/markets/{marketId}/shops/{shopId}/items/{itemId}")
+    @PutMapping(value="/markets/{marketId}/shops/{shopId}/items/{itemId}", consumes = {"multipart/form-data"})
     @Operation(summary = "상품 수정", description = "상품 ID로 상품 정보를 수정합니다.")
     public ResponseEntity<ItemDto.Response> updateItem(
             @PathVariable Long itemId,

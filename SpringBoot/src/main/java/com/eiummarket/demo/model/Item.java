@@ -7,6 +7,8 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -46,13 +48,18 @@ public class Item {
     @Schema(description = "상품 설명", example = "찌거나 볶아서 맛있는 감자입니다. ")
     private String description;
 
-    @Column(name = "item_image_url")
-    @Schema(description = "상품 이미지 URL", example = "https://.../image.png")
-    private String itemImageUrl;
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ItemImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     @Column(name="created_at")
     @CreationTimestamp
     @Schema(description = "상품 생성 시간", example = "2025-08-13T20:15:30")
     private LocalDateTime createdAt;
+
 
 }

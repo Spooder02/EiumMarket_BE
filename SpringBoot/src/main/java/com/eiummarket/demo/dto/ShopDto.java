@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -48,11 +49,14 @@ public class ShopDto {
         @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
         private String description;
 
-        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
-        private String shopImageUrl;
-
         @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
         private String address;
+
+        @Schema(description = "이미지 원격 URL 리스트")
+        private List<@NotBlank String> imageUrls;
+
+        @Schema(description = "업로드할 이미지 파일들")
+        private List<MultipartFile> imageFiles;
 
     }
 
@@ -84,14 +88,21 @@ public class ShopDto {
         @Schema(description = "상점 설명", example = "다양한 메뉴와 저렴한 가격이 장점입니다.")
         private String description;
 
-        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
-        private String shopImageUrl;
-
         @Schema(description = "상점 위치", example = "전남 여수시 서교4길 8-3")
         private String address;
 
         @Schema(description = "카테고리 ID 목록", example = "[1,2]")
         private List<Long> categoryIds;
+
+        @Schema(description = "이미지 파일들 (교체/추가)")
+        private List<MultipartFile> imageFiles;
+
+        @Schema(description = "이미지 URL 들 (교체/추가)")
+        private List<String> imageUrls;
+
+        @Schema(description = "삭제할 이미지 ID 리스트")
+        private List<Long> imageIds;
+
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -103,9 +114,6 @@ public class ShopDto {
         @Schema(description = "시장 ID", example = "1")
         private Long marketId;
 
-        @Schema(description = "가게 대표 이미지 URL", example = "https://.../image.png")
-        private String shopImageUrl;
-
         @Schema(description = "상점 이름", example = "김밥천국")
         private String name;
 
@@ -116,7 +124,7 @@ public class ShopDto {
         private String openingHours;
 
         @Schema(description = "상점 주소", example = "전남 여수시 서교4길 8-3")
-        private String address; // ✨ ADDED
+        private String address;
 
         @Schema(description = "상점 위치/층수", example = "A-02호")
         private String floor;
@@ -144,6 +152,10 @@ public class ShopDto {
 
         @Schema(description = "카테고리 목록")
         private List<CategoryDto.Response> categories;
+
+        @Schema(description = "이미지 원격 URL 리스트")
+        private List<String> imageUrls;
+
     }
 
 }

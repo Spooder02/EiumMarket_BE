@@ -4,9 +4,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class MarketDto {
 
@@ -31,6 +33,12 @@ public class MarketDto {
 
         @Schema(description = "시장 설명", example = "전통 시장으로 다양한 먹거리와 상점이 밀집해 있습니다.")
         private String description;
+
+        @Schema(description = "이미지 원격 URL 리스트")
+        private List<@NotBlank String> imageUrls;
+
+        @Schema(description = "업로드할 이미지 파일들")
+        private List<MultipartFile> imageFiles;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -52,6 +60,15 @@ public class MarketDto {
 
         @Schema(description = "시장 설명", example = "전통 시장으로 다양한 먹거리와 상점이 밀집해 있습니다.")
         private String description;
+
+        @Schema(description = "이미지 파일들 (교체/추가 시)")
+        private List<MultipartFile> imageFiles;
+
+        @Schema(description = "이미지 URL 들 (교체/추가 시)")
+        private List<String> imageUrls;
+
+        @Schema(description = "삭제할 이미지 ID 리스트")
+        private List<Long> imageIds;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -77,5 +94,8 @@ public class MarketDto {
 
         @Schema(description = "시장 정보 생성 일시", example = "2025-08-13T20:15:30")
         private LocalDateTime createdAt;
+
+        @Schema(description = "시장 이미지 URL 목록")
+        private List<String> imageUrls;
     }
 }
