@@ -2,6 +2,8 @@ package com.eiummarket.demo.repository;
 
 import com.eiummarket.demo.model.Category;
 import com.eiummarket.demo.model.Shop;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +16,8 @@ import java.util.Optional;
 
 public interface ShopRepository extends JpaRepository<Shop, Long> {
 
+    boolean existsByShopIdAndMarket_MarketId(Long shopId, Long marketId);
+
     Optional<Shop> findByShopIdAndMarket_MarketId(Long shopId, Long marketId);
 
     Page<Shop> findAllByMarket_MarketId(Long marketId, Pageable pageable);
@@ -24,15 +28,18 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
     @Query("""
            select f.shop
              from Favorite f
-            where f.userId = :userId
+            where f.userDeviceId = :userDeviceId
               and (:marketId is null or f.shop.market.marketId = :marketId)
            """)
-    Page<Shop> findFavoriteShopsByUserId(@Param("userId") Integer userId,
+    Page<Shop> findFavoriteShopsByUserDeviceId(@Param("userDeviceId") Integer userDeviceId,
                                          @Param("marketId") Long marketId,
                                          Pageable pageable);
 
     Page<Shop> findByNameContaining(String keyword, Pageable pageable);
     Page<Shop> findByDescriptionContaining(String keyword, Pageable pageable);
+    Page<Shop> findByCategories_NameContaining(String categoryName, Pageable pageable);
+    Page<Shop> findByMarket_MarketIdAndNameContaining(Long marketId, String keyword, Pageable pageable);
+    Page<Shop> findByMarket_MarketIdAndDescriptionContaining(Long marketId, String keyword, Pageable pageable);
 
     @Modifying
     @Query("update Shop s set s.favoriteCount = s.favoriteCount + 1 where s.shopId = :shopId")
@@ -46,5 +53,6 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
            """)
     int decrementFavoriteCount(@Param("shopId") Long shopId);
 
-}
 
+    boolean existsByName(@NotBlank @Size(max = 255) String name);
+}

@@ -1,7 +1,6 @@
 package com.eiummarket.demo.controller;
 
 import com.eiummarket.demo.dto.ShopDto;
-import com.eiummarket.demo.service.FavoriteService;
 import com.eiummarket.demo.service.ShopService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,7 +24,6 @@ public class ShopController {
 
     private final ShopService shopService;
 
-    @GetMapping
     @Operation(summary = "시장 내 상점 전체/카테고리별 목록 조회",
             description = "특정 시장에 속한 모든 혹은 특정 카테고리의 상점을 페이지네이션으로 조회합니다. (카테고리가 null이라면 모든 상점을 가져옵니다)")
     @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -72,16 +70,16 @@ public class ShopController {
         shopService.deleteShop(marketId, shopId);
         return ResponseEntity.noContent().build();
     }
-
-    //가게 찾기
     @GetMapping("/search")
     @Operation(summary = "시장 내 가게 검색", description = "시장에 파라미터를 포함한 물건, 카테고리를 판매중인 가게 혹은 가게명이 있는지 검색 후 페이지네이션해 반환합니다.")
     public ResponseEntity<Page<ShopDto.Response>> searchShopList(
+            @PathVariable Long marketId,
             @Parameter(description = "검색어(대소문자 무시, 부분 일치", example = "상추")
             @RequestParam(value = "search") String search,
             @ParameterObject Pageable pageable
     ){
-        return ResponseEntity.ok(shopService.search(search,pageable));
+        return ResponseEntity.ok(shopService.search(marketId,search,pageable));
     }
+
 
 }

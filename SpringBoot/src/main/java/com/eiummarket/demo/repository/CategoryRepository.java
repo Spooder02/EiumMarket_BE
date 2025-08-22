@@ -24,4 +24,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      where LOWER(c.name) like :pattern escape '\\'
 """)
     Page<Shop> findShopsByCategoryNameLike(@Param("pattern") String pattern, Pageable pageable);
+
+    @Query("" +
+            "SELECT DISTINCT s " +
+            "FROM Shop s " +
+            "JOIN s.categories c " +
+            "WHERE s.market.marketId = :marketId " +
+            "AND c.name LIKE %:keyword%")
+    Page<Shop> findShopsByMarketIdAndCategoryNameLike(@Param("marketId") Long marketId, @Param("keyword") String keyword, Pageable pageable);
 }
