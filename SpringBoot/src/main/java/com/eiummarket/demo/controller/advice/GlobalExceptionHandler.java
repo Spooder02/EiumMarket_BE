@@ -6,12 +6,10 @@ import com.eiummarket.demo.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j // 로그 출력을 위해 추가
-@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // ResourceNotFoundException 처리
