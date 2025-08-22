@@ -54,5 +54,9 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
     int decrementFavoriteCount(@Param("shopId") Long shopId);
 
 
-    boolean existsByName(@NotBlank @Size(max = 255) String name);
+
+
+    // 필요 시 중복 이름 방지 등 추가 가능
+    boolean existsByMarket_MarketIdAndName(Long marketId, String name);
+
 }
