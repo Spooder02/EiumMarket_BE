@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/markets/{marketId}/shops")
 @RequiredArgsConstructor
 @Tag(name = "Shop API", description = "가게 및 상품 관리 API")
 public class ShopController {
@@ -28,15 +27,15 @@ public class ShopController {
             description = "특정 시장에 속한 모든 혹은 특정 카테고리의 상점을 페이지네이션으로 조회합니다. (카테고리가 null이라면 모든 상점을 가져옵니다)")
     @ApiResponse(responseCode = "200", description = "조회 성공",
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
-    @GetMapping()
+    @GetMapping("/markets/{marketId}/shops")
     public ResponseEntity<Page<ShopDto.Response>> listShops(
             @PathVariable Long marketId,
-            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long categoryId,
             Pageable pageable) {
-        return ResponseEntity.ok(shopService.getShops(marketId, category, pageable));
+        return ResponseEntity.ok(shopService.getShops(marketId, categoryId, pageable));
     }
     // 시장 내 상점 등록
-    @PostMapping(consumes = {"multipart/form-data"})
+    @PostMapping(value = "/markets/{marketId}/shops", consumes = {"multipart/form-data"})
     @Operation(summary = "상점 등록", description = "시장 내 새로운 상점을 등록합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공",
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
@@ -46,7 +45,7 @@ public class ShopController {
         return ResponseEntity.status(201).body(shopService.createShop(marketId, req));
     }
     // 시장 내 상점 조회
-    @GetMapping("/{shopId}")
+    @GetMapping("/markets/{marketId}/shops/{shopId}")
     @Operation(summary = "상점 조회", description = "시장 내 특정 상점 정보를 조회합니다.")
     public ResponseEntity<ShopDto.Response> getShop(
             @PathVariable Long marketId,
@@ -54,7 +53,7 @@ public class ShopController {
         return ResponseEntity.ok(shopService.getShop(marketId, shopId));
     }
     // 가게 정보 수정
-    @PatchMapping(value = "/{shopId}", consumes = {"multipart/form-data"})
+    @PatchMapping(value = "/markets/{marketId}/shops/{shopId}", consumes = {"multipart/form-data"})
     @Operation(summary = "가게 정보 수정", description = "상점의 전체 정보를 수정합니다.")
     public ResponseEntity<ShopDto.Response> updateShop(
             @PathVariable Long marketId,
@@ -63,7 +62,7 @@ public class ShopController {
         return ResponseEntity.ok(shopService.updateShop(marketId, shopId, req));
     }
     // 가게 삭제
-    @DeleteMapping("/{shopId}")
+    @DeleteMapping("/markets/{marketId}/shops/{shopId}")
     @Operation(summary = "가게 삭제", description = "상점을 삭제합니다.")
     public ResponseEntity<Void> deleteShop(
             @PathVariable Long marketId,
@@ -73,7 +72,7 @@ public class ShopController {
     }
 
     /** AI 관련 API */
-   @GetMapping("/{shopId}/ai/description")
+   @GetMapping("/markets/{marketId}/shops/{shopId}/ai/description")
    public ResponseEntity<String> getShopItemDescription(@PathVariable Long marketId,
                                                         @PathVariable Long shopId,
                                                         @RequestParam String shopName) {
@@ -82,7 +81,7 @@ public class ShopController {
        return ResponseEntity.ok(description);
    }
   
-    @GetMapping("/search")
+    @GetMapping("/markets/{marketId}/search")
     @Operation(summary = "시장 내 가게 검색", description = "시장에 파라미터를 포함한 물건, 카테고리를 판매중인 가게 혹은 가게명이 있는지 검색 후 페이지네이션해 반환합니다.")
     public ResponseEntity<Page<ShopDto.Response>> searchShopList(
             @PathVariable Long marketId,
@@ -90,7 +89,7 @@ public class ShopController {
             @RequestParam(value = "search") String search,
             @ParameterObject Pageable pageable
     ){
-        return ResponseEntity.ok(shopService.search(marketId,search,pageable));
+        return ResponseEntity.ok(shopService.searchShops(marketId,search,pageable));
     }
 
 
