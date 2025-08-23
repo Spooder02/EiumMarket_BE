@@ -9,10 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
-    boolean existsByShop_ShopIdAndUserId(Long shopId, Integer userId);
-    Optional<Favorite> findByShop_ShopIdAndUserId(Long shopId, Integer userId);
-    long deleteByShop_ShopIdAndUserId(Long shopId, Integer userId);
-    Long countByShop_ShopId(Long shopId);
-    Page<Favorite> findByUserIdAndShopMarketMarketId(Integer userId, Long marketId, Pageable pageable);
-
+    Optional<Favorite> findByShop_ShopIdAndShop_Market_MarketId(Long shopId, Long marketId);
+    Page<Favorite> findByShop_Market_MarketId(Long marketId, Pageable pageable);
 }

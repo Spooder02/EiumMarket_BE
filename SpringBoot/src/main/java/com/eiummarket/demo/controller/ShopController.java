@@ -28,6 +28,7 @@ public class ShopController {
             description = "특정 시장에 속한 모든 혹은 특정 카테고리의 상점을 페이지네이션으로 조회합니다. (카테고리가 null이라면 모든 상점을 가져옵니다)")
     @ApiResponse(responseCode = "200", description = "조회 성공",
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
+    @GetMapping()
     public ResponseEntity<Page<ShopDto.Response>> listShops(
             @PathVariable Long marketId,
             @RequestParam(required = false) String category,

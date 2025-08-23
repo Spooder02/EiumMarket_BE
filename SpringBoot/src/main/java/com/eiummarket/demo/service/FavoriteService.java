@@ -24,31 +24,36 @@ public class FavoriteService {
     private final ShopRepository shopRepository;
 
     @Transactional
-    public void likeShop(Long shopId, Integer userId) {
-        if (favoriteRepository.existsByShop_ShopIdAndUserId(shopId, userId)) return;
+    public void likeShop(Long marketId, Long shopId) {
+        Shop shop = shopRepository.findByShopIdAndMarket_MarketId(shopId, marketId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 시장에서 상점을 찾을 수 없습니다. MarketID=" + marketId + ", ShopID=" + shopId));
 
-        Shop shop = shopRepository.findById(shopId)
-                .orElseThrow(() -> new EntityNotFoundException("상점을 찾을 수 없습니다. ID=" + shopId));
-        favoriteRepository.save(Favorite.builder().shop(shop).userId(userId).build());
-        // 카운트 +1
+        Favorite favorite = favoriteRepository.findByShop_ShopIdAndShop_Market_MarketId(shopId, marketId)
+                .orElse(Favorite.builder()
+                        .shop(shop)
+                        .favoriteCount(0L)
+                        .build());
+
+        favorite.setFavoriteCount(favorite.getFavoriteCount() + 1);
+        favoriteRepository.save(favorite);
         shopRepository.incrementFavoriteCount(shopId);
     }
 
     @Transactional
-    public void unlikeShop(Long shopId, Integer userId) {
-        long deleted = favoriteRepository.deleteByShop_ShopIdAndUserId(shopId, userId);
-        if (deleted > 0) {
+    public void unlikeShop(Long marketId, Long shopId) {
+        Favorite favorite = favoriteRepository.findByShop_ShopIdAndShop_Market_MarketId(shopId, marketId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 시장에서 찜 정보를 찾을 수 없습니다. MarketID=" + marketId + ", ShopID=" + shopId));
+
+        if (favorite.getFavoriteCount() > 0) {
+            favorite.setFavoriteCount(favorite.getFavoriteCount() - 1);
+            favoriteRepository.save(favorite);
             shopRepository.decrementFavoriteCount(shopId);
         }
-
     }
 
-    public Page<ShopDto.Response> listFavorites(Integer userId, Long marketId, Pageable pageable) {
-        Page<Favorite> favoritePage = favoriteRepository.findByUserIdAndShopMarketMarketId(userId, marketId, pageable);
-
-        Page<Shop> shopPage = favoritePage.map(Favorite::getShop);
-        
-        return shopPage.map(this::toResponse);
+    public Page<ShopDto.Response> listFavorites(Long marketId, Pageable pageable) {
+        Page<Favorite> favoritePage = favoriteRepository.findByShop_Market_MarketId(marketId, pageable);
+        return favoritePage.map(favorite -> toResponse(favorite.getShop()));
     }
 
     private ShopDto.Response toResponse(Shop shop) {
@@ -62,6 +67,7 @@ public class FavoriteService {
                 .latitude(shop.getLatitude())
                 .longitude(shop.getLongitude())
                 .description(shop.getDescription())
+                .favoriteCount(shop.getFavoriteCount())
                 .createdAt(shop.getCreatedAt())
                 .categories(shop.getCategories().stream()
                         .map(cat -> CategoryDto.Response.builder()
