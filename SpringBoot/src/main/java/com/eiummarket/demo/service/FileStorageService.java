@@ -15,10 +15,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileStorageService {
 
-    @Value("${app.upload.dir:uploads}")
+    @Value("${app.upload.dir:static}")
     private String uploadDir;
 
-    @Value("${app.upload.public-base:/uploads}")
+    @Value("${app.upload.public-base:/static}")
     private String publicBase;
 
     public String storeFile(MultipartFile file) {

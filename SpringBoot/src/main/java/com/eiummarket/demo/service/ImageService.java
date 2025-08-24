@@ -25,7 +25,7 @@ public class ImageService {
     private final ItemImageRepository itemImageRepository;
     private final ReviewImageRepository reviewImageRepository;
 
-    private final String uploadDir = "uploads/";
+    private final String uploadDir = "static/";
 
     public ImageDto.Response uploadImage(Long marketId, Long shopId, Long itemId, Long reviewId, MultipartFile file, ImageDto.UploadRequest request) throws IOException {
         String imageUrl;
@@ -38,7 +38,7 @@ public class ImageService {
         else if (file != null && !file.isEmpty()) {
             File dest = new File(uploadDir + file.getOriginalFilename());
             file.transferTo(dest);
-            imageUrl = "/uploads/" + file.getOriginalFilename();
+            imageUrl = "/static/" + file.getOriginalFilename();
         } else {
             throw new IllegalArgumentException("파일 또는 URL 중 하나는 반드시 입력해야 합니다.");
         }
