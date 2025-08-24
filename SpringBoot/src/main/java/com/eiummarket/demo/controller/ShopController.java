@@ -64,7 +64,7 @@ public class ShopController {
     public ResponseEntity<ShopDto.Response> updateShop(
             @PathVariable Long marketId,
             @PathVariable Long shopId,
-            @Valid @RequestBody ShopDto.UpdateRequest req) {
+            @Valid @ModelAttribute ShopDto.UpdateRequest req) {
         return ResponseEntity.ok(shopService.updateShop(marketId, shopId, req));
     }
     // 가게 삭제
