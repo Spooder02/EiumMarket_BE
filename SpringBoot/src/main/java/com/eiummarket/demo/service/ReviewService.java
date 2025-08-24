@@ -37,7 +37,7 @@ public class ReviewService {
 
         Review saved = reviewRepository.save(
                 Review.builder()
-                        .shop(shop).item(item).userDeviceId(req.getUserDeviceId())
+                        .shop(shop).item(item).userId(req.getUserId())
                         .rating(req.getRating()).content(req.getContent())
                         .build()
         );
@@ -106,7 +106,7 @@ public class ReviewService {
 
     private ReviewDto.Response toResponse(Review r) {
         return ReviewDto.Response.builder()
-                .reviewId(r.getReviewId()).userDeviceId(r.getUserDeviceId())
+                .reviewId(r.getReviewId()).userId(r.getUserId())
                 .rating(r.getRating()).content(r.getContent())
                 .shopId(r.getShop() == null ? null : r.getShop().getShopId())
                 .itemId(r.getItem() == null ? null : r.getItem().getItemId())
