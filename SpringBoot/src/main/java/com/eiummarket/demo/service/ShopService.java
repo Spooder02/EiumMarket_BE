@@ -17,6 +17,7 @@ import com.eiummarket.demo.repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.domain.Page;
@@ -40,8 +41,7 @@ import java.util.Optional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.eiummarket.demo.Utils.SearchUtils.addAll;
-import static com.eiummarket.demo.Utils.SearchUtils.sortByPageable;
+import static com.eiummarket.demo.Utils.SearchUtils.*;
 import static java.util.Collections.list;
 
 @Service
@@ -106,11 +106,11 @@ public class ShopService {
     /**
      * 시장 내 상점들 조회
      */
-    public Page<ShopDto.Response> getShops(Long marketId, String categoryName, Pageable pageable) {
+    public Page<ShopDto.Response> getShops(Long marketId, Long categoryId, Pageable pageable) {
         Category category = null;
-        if (categoryName != null) {
-            category = categoryRepository.findByName(categoryName)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryName));
+        if (categoryId != null) {
+            category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다: " + categoryId));
         }
         Page<Shop> page = (category == null)
                 ? shopRepository.findAllByMarket_MarketId(marketId, pageable)
@@ -164,10 +164,14 @@ public class ShopService {
         shopRepository.delete(shop);
     }
 
-    public Page<ShopDto.Response> search(Long marketId, String keyword, Pageable pageable) {
+    public Page<ShopDto.Response> searchShops(Long marketId, String keyword, Pageable pageable) {
         String sanitized = SearchUtils.sanitize(keyword);
         if (sanitized == null) {
-            return shopRepository.findAllByMarket_MarketId(marketId, pageable).map(this::toResponse);
+            return shopRepository.findAll(pageable).map(this::toResponse);
+        }
+        sanitized = sanitized.replace("%", "").replace("_", "").trim();
+        if (!org.springframework.util.StringUtils.hasText(sanitized)) {
+            return shopRepository.findAll(pageable).map(this::toResponse);
         }
 
         int cap = Math.max(pageable.getPageSize() * 5, 100);
@@ -180,13 +184,13 @@ public class ShopService {
         List<Shop> byItem = itemRepository.findShopsByMarketIdAndItemKeyword(marketId, sanitized, probe).getContent();
 
         Map<Long, Shop> merged = new LinkedHashMap<>();
-        addAll(merged, byName);
-        addAll(merged, byDesc);
-        addAll(merged, byCategory);
-        addAll(merged, byItem);
+        addAllShops(merged, byName);
+        addAllShops(merged, byDesc);
+        addAllShops(merged, byCategory);
+        addAllShops(merged, byItem);
 
         List<Shop> all = new ArrayList<>(merged.values());
-        sortByPageable(all, pageable);
+        sortByPageableShop(all, pageable);
 
         int total = all.size();
         int start = (int) pageable.getOffset();

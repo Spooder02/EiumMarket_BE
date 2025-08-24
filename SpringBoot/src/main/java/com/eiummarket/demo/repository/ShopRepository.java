@@ -33,15 +33,11 @@ public interface ShopRepository extends JpaRepository<Shop, Long> {
 
     @Modifying
     @Query("update Shop s set s.favoriteCount = s.favoriteCount + 1 where s.shopId = :shopId")
-    int incrementFavoriteCount(@Param("shopId") Long shopId);
+    void incrementFavoriteCount(@Param("shopId") Long shopId);
 
     @Modifying
-    @Query("""
-           update Shop s
-           set s.favoriteCount = case when s.favoriteCount > 0 then s.favoriteCount - 1 else 0 end
-           where s.shopId = :shopId
-           """)
-    int decrementFavoriteCount(@Param("shopId") Long shopId);
+    @Query("update Shop s set s.favoriteCount = s.favoriteCount - 1 where s.shopId = :shopId and s.favoriteCount > 0")
+    void decrementFavoriteCount(@Param("shopId") Long shopId);
 
     // 필요 시 중복 이름 방지 등 추가 가능
     boolean existsByMarket_MarketIdAndName(Long marketId, String name);

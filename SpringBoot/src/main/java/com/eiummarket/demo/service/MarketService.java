@@ -1,19 +1,29 @@
 package com.eiummarket.demo.service;
 
+import com.eiummarket.demo.Utils.SearchUtils;
 import com.eiummarket.demo.dto.MarketDto;
 import com.eiummarket.demo.model.Market;
 import com.eiummarket.demo.model.MarketImage;
+import com.eiummarket.demo.model.Shop;
 import com.eiummarket.demo.repository.MarketImageRepository;
 import com.eiummarket.demo.repository.MarketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.eiummarket.demo.Utils.SearchUtils.addAllMarkets;
 
 @Service
 @RequiredArgsConstructor
@@ -112,6 +122,37 @@ public class MarketService {
                 .orElseThrow(() -> new EntityNotFoundException("해당 시장을 찾을 수 없습니다. ID=" + marketId));
         // 관련된 상점, 상품, 리뷰 등이 모두 삭제됨 (cascade = CascadeType.ALL)
         marketRepository.delete(market);
+    }
+
+    @Transactional
+    public Page<MarketDto.Response> searchMarkets(String keyword, Pageable pageable){
+        String sanitized = SearchUtils.sanitize(keyword);
+        if (sanitized == null) {
+            return marketRepository.findAll(pageable).map(this::toResponse);
+        }
+        sanitized = sanitized.replace("%", "").replace("_", "").trim();
+        if (!org.springframework.util.StringUtils.hasText(sanitized)) {
+            return marketRepository.findAll(pageable).map(this::toResponse);
+        }
+
+        List<Market> ByName= marketRepository.findMarketByNameContaining(sanitized, pageable).getContent();
+        List<Market> ByDesc = marketRepository.findMarketByDescriptionContaining(sanitized, pageable).getContent();
+
+        Map<Long, Market> merged = new LinkedHashMap<>();
+        addAllMarkets(merged, ByDesc);
+        addAllMarkets(merged, ByName);
+
+        List<Market> all = new ArrayList<>(merged.values());
+        SearchUtils.sortByPageableMarket(all, pageable);
+
+        int total=all.size();
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), total);
+        List<Market> slice = (start >= total) ? List.of() : all.subList(start, end);
+
+        return new PageImpl<>(slice.stream().map(this::toResponse).toList(), pageable, total);
+
+
     }
 
     private MarketDto.Response toResponse(Market m) {
