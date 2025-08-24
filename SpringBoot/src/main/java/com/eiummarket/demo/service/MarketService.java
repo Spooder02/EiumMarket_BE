@@ -75,6 +75,12 @@ public class MarketService {
         return toResponse(market);
     }
 
+    public String getMarketNameById(Long marketId) {
+        Market market = marketRepository.findById(marketId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 시장을 찾을 수 없습니다."));
+        return market.getName();
+    }
+
     public Page<MarketDto.Response> list(Pageable pageable) {
         return marketRepository.findAll(pageable).map(this::toResponse);
     }

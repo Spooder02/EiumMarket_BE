@@ -83,14 +83,15 @@ def generate_product_image():
     prompt = f"성남시에 있는 시장에서 파는 '{name}' 상품의 사실적인 사진, 흰색 배경 (photorealistic, white background)"
     return generate_image_from_prompt(prompt)
 
-@app.route("/image/market", methods=["GET"])
-def generate_market_image():
+@app.route("/image/shop", methods=["GET"])
+def generate_shop_image():
     title = request.args.get("title")
+    market_name = request.args.get("market_name")
     description = request.args.get("description")
     if not title or not description:
         return jsonify({"error": "title과 description 파라미터가 모두 필요합니다."}), 400
     
-    prompt = f"성남시에 있는 전통 시장에 있는 '{title}'이라는 가게. 가게 특징은 '{description}'. 이 가게의 전면을 보여주는 사실적인 사진, 가게 이름 간판 포함 (photorealistic, front view of the store, including the store name sign)"
+    prompt = f"{market_name}에 있는 '{title}'이라는 가게. 가게 특징은 '{description}'. 이 가게의 전면을 보여주는 사실적인 사진, 가게 이름만 간판에 포함 (photorealistic, front view of the store, including the store name sign, not including the feature to text)"
     return generate_image_from_prompt(prompt)
 
 @app.route("/text/description", methods=["GET"])
