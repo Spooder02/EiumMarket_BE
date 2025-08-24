@@ -9,26 +9,19 @@ import com.eiummarket.demo.repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
 
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
-
-import org.springframework.http.HttpStatus;
-
 import org.springframework.data.domain.*;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.eiummarket.demo.Utils.SearchUtils.*;
-import static java.util.Collections.list;
 
 @Service
 @RequiredArgsConstructor
@@ -236,7 +229,12 @@ public class ShopService {
      * AI 관련 API
      */
 
-    public String getShopItemDescription(Long marketId, Long shopId, String shopName) {
+    public String getShopItemDescription(Long marketId, Long shopId) {
+
+        String shopName = shopRepository.findById(shopId)
+                .map(Shop::getName)
+                .orElseThrow();
+
         Mono<String> responseMono = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/text/description")
