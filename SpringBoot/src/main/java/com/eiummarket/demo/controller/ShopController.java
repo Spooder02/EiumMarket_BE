@@ -47,7 +47,7 @@ public class ShopController {
             content = @Content(schema = @Schema(implementation = ShopDto.Response.class)))
     public ResponseEntity<ShopDto.Response> createShop(
             @PathVariable Long marketId,
-            @Valid @RequestBody ShopDto.CreateRequest req) {
+            @Valid @ModelAttribute ShopDto.CreateRequest req) {
         return ResponseEntity.status(201).body(shopService.createShop(marketId, req));
     }
     // 시장 내 상점 조회
