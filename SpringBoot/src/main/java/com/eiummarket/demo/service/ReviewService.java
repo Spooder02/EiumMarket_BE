@@ -77,9 +77,9 @@ public class ReviewService {
         if (req.getRating() != null) r.setRating(req.getRating());
         if (req.getContent() != null) r.setContent(req.getContent());
 
-        // 이미지 개별 삭제
+        // 이미지 전체 삭제
         if (req.getImageIds() != null) {
-            r.getImages().removeIf(img -> req.getImageIds().contains(img.getReviewImageId()));
+            r.getImages().clear();
         }
         // 이미지 파일 개별 추가
         if (req.getImageFiles() != null) {

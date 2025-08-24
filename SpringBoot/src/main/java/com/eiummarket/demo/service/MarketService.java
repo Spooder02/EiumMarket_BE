@@ -49,21 +49,18 @@ public class MarketService {
 
         Market saved = marketRepository.save(market);
 
+        // 이미지 파일 개별 추가
         if (req.getImageFiles() != null) {
             for (MultipartFile f : req.getImageFiles()) {
                 String url = fileStorageService.storeFile(f);
-                marketImageRepository.save(MarketImage.builder()
-                        .market(saved)
-                        .url(url)
-                        .build());
+                if (url != null) market.getImages().add(MarketImage.builder().market(market).url(url).build());
             }
         }
+        // 이미지 URL 개별 추가
         if (req.getImageUrls() != null) {
             for (String url : req.getImageUrls()) {
-                marketImageRepository.save(MarketImage.builder()
-                        .market(saved)
-                        .url(url)
-                        .build());
+                boolean exists = market.getImages().stream().anyMatch(img -> img.getUrl().equals(url));
+                if (!exists) market.getImages().add(MarketImage.builder().market(market).url(url).build());
             }
         }
         return toResponse(saved);
