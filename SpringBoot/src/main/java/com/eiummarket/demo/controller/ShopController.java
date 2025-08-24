@@ -133,7 +133,7 @@ public class ShopController {
     public ResponseEntity<Page<ShopDto.Response>> searchShopList(
             @PathVariable Long marketId,
             @Parameter(description = "검색어(대소문자 무시, 부분 일치", example = "상추")
-            @RequestParam(value = "search") String search,
+            @RequestParam(value = "keyword") String search,
             @ParameterObject Pageable pageable
     ){
         return ResponseEntity.ok(shopService.searchShops(marketId,search,pageable));

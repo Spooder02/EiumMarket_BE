@@ -14,8 +14,8 @@ public class ReviewDto {
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     @Schema(name = "ReviewCreateRequest", description = "리뷰 생성 요청(Shop 또는 Item 중 하나 지정)")
     public static class CreateRequest {
-        @NotNull @Schema(description = "작성자(사용자) device ID", example = "1234", requiredMode = Schema.RequiredMode.REQUIRED)
-        private Integer userDeviceId;
+        @NotNull @Schema(description = "작성자(사용자) ID", example = "1234", requiredMode = Schema.RequiredMode.REQUIRED)
+        private Integer userId;
 
         @Schema(description = "리뷰 대상 Shop ID")
         private Long shopId;
@@ -59,7 +59,7 @@ public class ReviewDto {
     @Schema(name = "ReviewResponse", description = "리뷰 응답 데이터")
     public static class Response {
         private Long reviewId;
-        private Integer userDeviceId;
+        private Integer userId;
         private Integer rating;
         private String content;
         private Long shopId;

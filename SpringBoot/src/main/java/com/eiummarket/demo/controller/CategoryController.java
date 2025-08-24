@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/categories")
+@RequestMapping("/markets/{marketId}/categories")
 @Tag(name = "Category API", description = "카테고리 관리 API")
 public class CategoryController {
 
