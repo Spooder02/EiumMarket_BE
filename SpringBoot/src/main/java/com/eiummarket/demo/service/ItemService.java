@@ -98,11 +98,9 @@ public class ItemService {
         if (request.getCategory() != null) item.setCategory(request.getCategory());
         if (request.getDescription() != null) item.setDescription(request.getDescription());
 
-        // 이미지 삭제
+        // 이미지 전체 삭제
         if (request.getImageIds() != null) {
-            for (Long imageId : request.getImageIds()) {
-                item.getImages().removeIf(img -> img.getItemImageId().equals(imageId));
-            }
+            item.getImages().clear();
         }
 
         // 이미지 파일 추가

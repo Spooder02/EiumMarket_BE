@@ -130,9 +130,9 @@ public class ShopService {
         Optional.ofNullable(request.getName()).ifPresent(shop::setName);
         Optional.ofNullable(request.getDescription()).ifPresent(shop::setDescription);
 
-        // 이미지 개별 삭제
+        // 이미지 전체 삭제
         if (request.getImageIds() != null) {
-            shop.getImages().removeIf(img -> request.getImageIds().contains(img.getShopImageId()));
+            shop.getImages().clear();
         }
         // 이미지 파일 개별 추가
         if (request.getImageFiles() != null) {

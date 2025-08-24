@@ -17,9 +17,9 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping("/reviews")
+    @PostMapping(value = "/reviews", consumes = {"multipart/form-data"})
     @Operation(summary = "리뷰 생성", description = "Shop 또는 Item 중 하나에 대한 리뷰를 생성합니다. (이미지 URL/파일 포함 가능)")
-    public ResponseEntity<ReviewDto.Response> create(@Valid @RequestBody ReviewDto.CreateRequest req) {
+    public ResponseEntity<ReviewDto.Response> create(@Valid @ModelAttribute ReviewDto.CreateRequest req) {
         return ResponseEntity.status(201).body(reviewService.createReview(req));
     }
 
@@ -41,10 +41,10 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.listByItem(itemId, pageable));
     }
 
-    @PutMapping("/reviews/{reviewId}")
+    @PatchMapping(value="/reviews/{reviewId}", consumes = {"multipart/form-data"})
     @Operation(summary = "리뷰 수정", description = "리뷰의 평점/내용을 수정합니다.")
     public ResponseEntity<ReviewDto.Response> update(@PathVariable Long reviewId,
-                                                     @Valid @RequestBody ReviewDto.UpdateRequest req) {
+                                                     @Valid @ModelAttribute ReviewDto.UpdateRequest req) {
         return ResponseEntity.ok(reviewService.updateReview(reviewId, req));
     }
 
