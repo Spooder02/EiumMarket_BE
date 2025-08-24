@@ -155,6 +155,11 @@ public class MarketService {
 
     }
 
+    @Transactional
+    public boolean checkMarketExistence(String name, String address) {
+        return marketRepository.findByNameOrAddress(name, address).isPresent();
+    }
+
     private MarketDto.Response toResponse(Market m) {
         return MarketDto.Response.builder()
                 .marketId(m.getMarketId())

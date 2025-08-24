@@ -76,4 +76,16 @@ public class MarketController {
         return ResponseEntity.ok(marketService.searchMarkets(q,pageable));
     }
 
+    @GetMapping("/check-exist")
+    @Operation(summary = "시장 존재 여부 확인", description = "시장 이름 또는 주소로 시장의 존재 여부를 확인합니다.")
+    public ResponseEntity<Boolean> checkMarketExistence(
+            @Parameter(description = "시장 이름", example = "온양온천시장")
+            @RequestParam(value = "name", required = false) String name,
+            @Parameter(description = "시장 주소", example = "충청남도 아산시 온천동 102-11")
+            @RequestParam(value = "address", required = false) String address
+    ) {
+        boolean exists = marketService.checkMarketExistence(name, address);
+        return ResponseEntity.ok(exists);
+    }
+
 }
