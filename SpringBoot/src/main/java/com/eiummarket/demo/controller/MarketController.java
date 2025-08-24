@@ -66,7 +66,7 @@ public class MarketController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("search")
+    @GetMapping("/search")
     @Operation(summary = "시장 내 가게 검색", description = "시장에 파라미터를 포함한 물건, 카테고리를 판매중인 가게 혹은 가게명이 있는지 검색 후 페이지네이션해 반환합니다.")
     public ResponseEntity<Page<MarketDto.Response>> searchMarketList(
             @Parameter(description = "검색어(대소문자 무시, 부분 일치", example = "아산")
