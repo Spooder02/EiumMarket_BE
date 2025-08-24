@@ -78,17 +78,7 @@ public class ShopController {
     }
 
     /** AI 관련 API */
-   @GetMapping("/markets/{marketId}/shops/{shopId}/ai/description")
-   public ResponseEntity<String> getShopItemDescription(@PathVariable Long marketId,
-                                                        @PathVariable Long shopId,
-                                                        @RequestParam String shopName) {
 
-       String description = shopService.getShopItemDescription(marketId, shopId, shopName);
-       return ResponseEntity.ok(description);
-   }
-  
-    @GetMapping("/markets/{marketId}/search")
-=======
     @GetMapping("/{shopId}/ai/description")
     @Operation(summary = "AI 상품 설명 생성", description = "가게 이름을 기반으로 AI가 상품 설명/카테고리를 생성하여 반환합니다.")
     public ResponseEntity<String> getShopItemDescription(@PathVariable Long marketId,
@@ -139,7 +129,6 @@ public class ShopController {
     }
 
     @GetMapping("/search")
->>>>>>> main
     @Operation(summary = "시장 내 가게 검색", description = "시장에 파라미터를 포함한 물건, 카테고리를 판매중인 가게 혹은 가게명이 있는지 검색 후 페이지네이션해 반환합니다.")
     public ResponseEntity<Page<ShopDto.Response>> searchShopList(
             @PathVariable Long marketId,
