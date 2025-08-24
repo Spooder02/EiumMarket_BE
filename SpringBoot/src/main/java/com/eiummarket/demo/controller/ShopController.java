@@ -36,7 +36,7 @@ public class ShopController {
     @GetMapping("/markets/{marketId}/shops")
     public ResponseEntity<Page<ShopDto.Response>> listShops(
             @PathVariable Long marketId,
-            @RequestParam(required = false) Long categoryId,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
             Pageable pageable) {
         return ResponseEntity.ok(shopService.getShops(marketId, categoryId, pageable));
     }
@@ -131,7 +131,7 @@ public class ShopController {
     @GetMapping("/search")
     @Operation(summary = "시장 내 가게 검색", description = "시장에 파라미터를 포함한 물건, 카테고리를 판매중인 가게 혹은 가게명이 있는지 검색 후 페이지네이션해 반환합니다.")
     public ResponseEntity<Page<ShopDto.Response>> searchShopList(
-            @PathVariable Long marketId,
+            @RequestParam(value = "marketId") Long marketId,
             @Parameter(description = "검색어(대소문자 무시, 부분 일치", example = "상추")
             @RequestParam(value = "keyword") String search,
             @ParameterObject Pageable pageable
