@@ -4,24 +4,13 @@ import com.eiummarket.demo.Utils.SearchUtils;
 import com.eiummarket.demo.dto.CategoryDto;
 import com.eiummarket.demo.dto.ItemDto;
 import com.eiummarket.demo.dto.ShopDto;
-
-import com.eiummarket.demo.model.Item;
-import com.eiummarket.demo.model.Market;
-import com.eiummarket.demo.model.Shop;
-import com.eiummarket.demo.repository.ItemRepository;
-import com.eiummarket.demo.repository.MarketRepository;
-import com.eiummarket.demo.repository.ShopRepository;
-
 import com.eiummarket.demo.model.*;
 import com.eiummarket.demo.repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import org.springframework.http.HttpStatus;
 
@@ -35,9 +24,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -89,6 +75,19 @@ public class ShopService {
                 .build();
 
         Shop saved = shopRepository.save(shop);
+
+        if (request.getImageFiles() != null) {
+            for (MultipartFile f : request.getImageFiles()) {
+                String url = fileStorageService.storeFile(f);
+                if (url != null) saved.getImages().add(ShopImage.builder().shop(saved).url(url).build());
+            }
+        }
+        if (request.getImageUrls() != null) {
+            for (String url : request.getImageUrls()) {
+                saved.getImages().add(ShopImage.builder().shop(saved).url(url).build());
+            }
+        }
+        
         return toResponse(saved);
     }
 
