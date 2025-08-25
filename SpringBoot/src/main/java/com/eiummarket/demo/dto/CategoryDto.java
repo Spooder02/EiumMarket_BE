@@ -15,6 +15,8 @@ public class CategoryDto {
         @Size(max = 50)
         @Schema(description = "카테고리 이름", example = "채소", requiredMode = Schema.RequiredMode.REQUIRED)
         private String name;
+
+        private String icon;
     }
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -27,5 +29,7 @@ public class CategoryDto {
         @NotBlank
         @Schema(description = "카테고리 이름", example = "채소", requiredMode = Schema.RequiredMode.REQUIRED)
         private String name;
+
+        private String icon;
     }
 }

@@ -3,6 +3,7 @@ package com.eiummarket.demo.model;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,4 +31,7 @@ public class Category {
     @ManyToMany(mappedBy = "categories")
     @Builder.Default
     private List<Shop> shops = new ArrayList<>();
+
+    @Column(name="category_icon")
+    private String icon;
 }
