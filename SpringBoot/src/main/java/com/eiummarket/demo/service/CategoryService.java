@@ -39,6 +39,7 @@ public class CategoryService {
         }
         Category category = Category.builder()
                 .name(request.getName())
+                .icon(request.getIcon())
                 .build();
         Category savedCategory = categoryRepository.save(category);
         return convertToResponseDto(savedCategory);
@@ -64,6 +65,7 @@ public class CategoryService {
         return CategoryDto.Response.builder()
                 .categoryId(category.getCategoryId())
                 .name(category.getName())
+                .icon(category.getIcon())
                 .build();
     }
 }
