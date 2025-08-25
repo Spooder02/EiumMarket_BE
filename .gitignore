@@ -4,3 +4,4 @@ EiumMarket.code-workspace
 **/.DS_Store
 /Flask/.env
 .env
+/data/static
